@@ -7,20 +7,26 @@ const os      = require('os');
 
 const app    = express();
 const server = http.createServer(app);
-const io     = new Server(server);
+const io     = new Server(server, { maxHttpBufferSize: 5e6 });
 
 app.use(express.static('public'));
 
-// ── Cast ─────────────────────────────────────────────────────────────────────
+// ── Admin ─────────────────────────────────────────────────────────────────────
 
-const CAST = [
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'jim2759';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GEMINI_MODEL   = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+
+// ── Default Cast ──────────────────────────────────────────────────────────────
+
+const DEFAULT_CAST = [
   'CHARLES','CAMILLA','WILLIAM','CATHERINE',
   'HARRY','MEGHAN','ANNE','EDWARD',
   'SOPHIE','ANDREW','PIPPA','BEATRICE',
   'FERGUS','ALL',
 ];
 
-const CAST_INFO = {
+const DEFAULT_CAST_INFO = {
   CHARLES:  { full:'King Charles',        desc:'Bewildered, posh beyond parody, earnest to a fault' },
   CAMILLA:  { full:'Queen Camilla',       desc:'Chain-smoking, gin-swilling, vulgarly perceptive' },
   WILLIAM:  { full:'Prince William',      desc:'Tense, managerial, faintly competitive' },
@@ -37,7 +43,7 @@ const CAST_INFO = {
   ALL:      { full:'ALL',                 desc:'Everyone speaks together' },
 };
 
-// ── Script text ───────────────────────────────────────────────────────────────
+// ── Default Script ────────────────────────────────────────────────────────────
 
 const SCRIPT_RAW = `
 SCENE ONE — BUCKINGHAM PALACE, THE THRONE ROOM
@@ -335,68 +341,197 @@ SOPHIE: God save the basil.
 ANNE: God save us all.
 `.trim();
 
-// ── Parser ────────────────────────────────────────────────────────────────────
+// ── Parsers ───────────────────────────────────────────────────────────────────
 
-function parseScript(raw) {
+/** Parse using known CAST list (for the default Windsors script) */
+function parseDefaultScript(raw) {
   const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
   const beats = [];
-  let cur  = null;
+  let cur = null;
   let sfxBuf = [];
-
-  const flushSfx = () => {
-    if (sfxBuf.length) {
-      beats.push({ type: 'sfx', text: sfxBuf.join(' ') });
-      sfxBuf = [];
-    }
-  };
-  const flushCur = () => {
-    if (cur) { beats.push(cur); cur = null; }
-  };
+  const flush = () => { if (sfxBuf.length) { beats.push({ type:'sfx', text:sfxBuf.join(' ') }); sfxBuf=[]; } };
+  const done  = () => { if (cur) { beats.push(cur); cur=null; } };
 
   for (const line of lines) {
-    if (line.startsWith('SFX:')) {
-      flushCur();
-      sfxBuf.push(line.slice(4).trim());
-      continue;
-    }
-    flushSfx();
-
-    if (/^SCENE\s+/.test(line)) {
-      flushCur();
-      beats.push({ type: 'scene', text: line });
-      continue;
-    }
-
-    if (/^Part\s+(One|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten)\s*:/i.test(line)) {
-      flushCur();
-      beats.push({ type: 'section', text: line });
-      continue;
-    }
-
-    const char = CAST.find(c => line.startsWith(c + ':'));
-    if (char) {
-      flushCur();
-      cur = { type: 'dialogue', character: char, text: line.slice(char.length + 1).trim() };
-      continue;
-    }
-
-    // continuation line — append to current dialogue beat
-    if (cur && cur.type === 'dialogue') {
-      cur.text += '\n' + line;
-    }
+    if (line.startsWith('SFX:')) { done(); sfxBuf.push(line.slice(4).trim()); continue; }
+    flush();
+    if (/^SCENE\s+/.test(line))  { done(); beats.push({ type:'scene', text:line }); continue; }
+    if (/^Part\s+(One|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten)\s*:/i.test(line)) { done(); beats.push({ type:'section', text:line }); continue; }
+    const ch = DEFAULT_CAST.find(c => line.startsWith(c+':'));
+    if (ch) { done(); cur={ type:'dialogue', character:ch, text:line.slice(ch.length+1).trim() }; continue; }
+    if (cur?.type==='dialogue') cur.text += '\n'+line;
   }
-  flushSfx();
-  flushCur();
-
-  return beats.map((b, i) => ({ ...b, id: i }));
+  flush(); done();
+  return beats.map((b,i)=>({...b, id:i}));
 }
 
-const BEATS = parseScript(SCRIPT_RAW);
-console.log(`Script parsed: ${BEATS.length} beats`);
+/** Parse with auto-discovered characters (for uploads / AI-generated) */
+function parseStandardFormat(raw) {
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const charPat = /^([A-Z][A-Z0-9 _'.()-]*?):\s/;
+  const chars = new Set();
+  for (const ln of lines) {
+    if (ln.startsWith('SFX:') || /^SCENE\s/i.test(ln)) continue;
+    const m = ln.match(charPat);
+    if (m) chars.add(m[1].trim());
+  }
+  const castList = [...chars];
+  const beats = [];
+  let cur = null;
+  let sfxBuf = [];
+  const flush = () => { if (sfxBuf.length) { beats.push({ type:'sfx', text:sfxBuf.join(' ') }); sfxBuf=[]; } };
+  const done  = () => { if (cur) { beats.push(cur); cur=null; } };
 
-// ── Admin ─────────────────────────────────────────────────────────────────────
+  for (const line of lines) {
+    if (line.startsWith('SFX:')) { done(); sfxBuf.push(line.slice(4).trim()); continue; }
+    flush();
+    if (/^SCENE\s+/i.test(line)) { done(); beats.push({ type:'scene', text:line }); continue; }
+    if (/^Part\s+\w+/i.test(line) && line.includes(':')) { done(); beats.push({ type:'section', text:line }); continue; }
+    const ch = castList.find(c => line.startsWith(c+':'));
+    if (ch) { done(); cur={ type:'dialogue', character:ch, text:line.slice(ch.length+1).trim() }; continue; }
+    if (cur?.type==='dialogue') cur.text += '\n'+line;
+  }
+  flush(); done();
+  return beats.map((b,i)=>({...b, id:i}));
+}
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'jim2759';
+/** Parse bracket format: [Scene], (SFX), ALL CAPS = character */
+function parseBracketFormat(raw) {
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const beats = [];
+  let i = 0;
+  while (i < lines.length) {
+    const ln = lines[i];
+    if (ln.startsWith('[') && ln.endsWith(']')) {
+      beats.push({ type:'scene', text:ln.slice(1,-1).trim() });
+      i++; continue;
+    }
+    if (ln.startsWith('(') && ln.endsWith(')')) {
+      beats.push({ type:'sfx', text:ln.slice(1,-1).trim() });
+      i++; continue;
+    }
+    if (/^[A-Z][A-Z\s]{1,}$/.test(ln)) {
+      const character = ln.trim();
+      const dlg = [];
+      i++;
+      while (i < lines.length) {
+        const nx = lines[i];
+        if ((nx.startsWith('[')&&nx.endsWith(']')) || (nx.startsWith('(')&&nx.endsWith(')')) || /^[A-Z][A-Z\s]{1,}$/.test(nx)) break;
+        dlg.push(nx);
+        i++;
+      }
+      if (dlg.length) beats.push({ type:'dialogue', character, text:dlg.join('\n') });
+      continue;
+    }
+    i++;
+  }
+  return beats.map((b,idx)=>({...b, id:idx}));
+}
+
+/** Auto-detect format and parse */
+function parseUploadedTxt(raw) {
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const hasBrackets = lines.some(l => l.startsWith('[') && l.endsWith(']'));
+  const hasSfx = lines.some(l => l.startsWith('SFX:'));
+  if (hasBrackets && !hasSfx) return parseBracketFormat(raw);
+  return parseStandardFormat(raw);
+}
+
+/** Extract cast from beats */
+function extractCast(beats) {
+  const chars = []; const seen = new Set();
+  beats.forEach(b => {
+    if (b.type==='dialogue' && b.character && !seen.has(b.character)) {
+      seen.add(b.character); chars.push(b.character);
+    }
+  });
+  return chars;
+}
+
+/** Generate basic castInfo from a cast list */
+function makeCastInfo(cast) {
+  const info = {};
+  cast.forEach(c => { info[c] = { full:c, desc:'' }; });
+  if (!info.ALL) info.ALL = { full:'ALL', desc:'Everyone speaks together' };
+  return info;
+}
+
+/** Export script to readable txt */
+function exportScript(script) {
+  return script.beats.map(b => {
+    if (b.type==='scene')    return b.text;
+    if (b.type==='section')  return b.text;
+    if (b.type==='sfx')      return 'SFX: '+b.text;
+    if (b.type==='dialogue') return b.character+': '+b.text.replace(/\n/g,'\n');
+    return '';
+  }).join('\n\n');
+}
+
+// ── Script Storage ────────────────────────────────────────────────────────────
+
+const DEFAULT_BEATS = parseDefaultScript(SCRIPT_RAW);
+console.log(`Default script parsed: ${DEFAULT_BEATS.length} beats`);
+
+const scripts = new Map();
+let activeScriptId = 'default';
+let nextScriptId = 1;
+
+scripts.set('default', {
+  id: 'default',
+  name: 'The Windsors: The Rebrand',
+  beats: DEFAULT_BEATS,
+  cast: DEFAULT_CAST.filter(c => c !== 'ALL'),
+  castInfo: DEFAULT_CAST_INFO,
+  isDefault: true,
+});
+
+function getActive() { return scripts.get(activeScriptId) || scripts.get('default'); }
+
+function scriptListPayload() {
+  return [...scripts.values()].map(s => ({
+    id: s.id, name: s.name, isDefault:!!s.isDefault,
+    isActive: s.id===activeScriptId, beatCount: s.beats.length,
+    castCount: s.cast.length,
+  }));
+}
+
+// ── Gemini AI ─────────────────────────────────────────────────────────────────
+
+async function generateWithGemini(premise) {
+  if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY not configured. Set it in Railway environment variables.');
+
+  const prompt = `Write a satirical comedy radio play based on this premise: "${premise}"
+
+Format rules (follow EXACTLY):
+- Scene headers: SCENE ONE — DESCRIPTION (use SCENE TWO, THREE, etc.)
+- Sound effects: SFX: description of sound
+- Character dialogue: CHARACTER_NAME: their dialogue text
+- Stage directions within dialogue in parentheses: (whispering)
+- Character names in ALL CAPS for dialogue lines
+
+Requirements:
+- 5-10 minutes when read aloud (at least 80 lines of dialogue)
+- 3-8 distinct characters with memorable personalities
+- At least 3 scenes
+- Include sound effects between scenes and during action
+- Sharp, witty, satirical humor throughout
+- Start DIRECTLY with SCENE ONE. No title, no cast list, no preamble.`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts:[{ text:prompt }] }],
+      generationConfig: { temperature:1.0, maxOutputTokens:8192 },
+    }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('No content generated');
+  return text;
+}
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -406,23 +541,43 @@ const state = {
 };
 
 function payload() {
+  const s = getActive();
+  const beats = s.beats;
   return {
     idx:   state.idx,
-    beat:  BEATS[state.idx],
-    total: BEATS.length,
+    beat:  beats[state.idx],
+    total: beats.length,
     users: Object.values(state.users),
-    ended: state.idx >= BEATS.length - 1,
+    ended: state.idx >= beats.length - 1,
+    activeScript: s.name,
   };
+}
+
+function broadcastScriptChange() {
+  const s = getActive();
+  state.idx = 0;
+  const castWithAll = [...s.cast];
+  if (!castWithAll.includes('ALL')) castWithAll.push('ALL');
+  io.emit('script-changed', {
+    beats: s.beats,
+    castInfo: s.castInfo,
+    cast: castWithAll,
+    name: s.name,
+  });
+  io.emit('state', payload());
 }
 
 // ── Sockets ───────────────────────────────────────────────────────────────────
 
 io.on('connection', socket => {
-  socket.emit('init', { beats: BEATS, castInfo: CAST_INFO, cast: CAST });
+  const s = getActive();
+  const castWithAll = [...s.cast];
+  if (!castWithAll.includes('ALL')) castWithAll.push('ALL');
+  socket.emit('init', { beats: s.beats, castInfo: s.castInfo, cast: castWithAll });
   socket.emit('state', payload());
 
   socket.on('join', ({ character }) => {
-    state.users[socket.id] = { id: socket.id, character, admin: false };
+    state.users[socket.id] = { id: socket.id, character, admin: !!socket.isAdmin };
     io.emit('state', payload());
   });
 
@@ -431,32 +586,98 @@ io.on('connection', socket => {
       socket.isAdmin = true;
       if (state.users[socket.id]) state.users[socket.id].admin = true;
       cb({ ok: true });
-      io.emit('state', payload());
     } else {
       cb({ ok: false });
     }
   });
 
   socket.on('advance', () => {
-    if (state.idx < BEATS.length - 1) {
-      state.idx++;
-      io.emit('state', payload());
-    }
+    const beats = getActive().beats;
+    if (state.idx < beats.length - 1) { state.idx++; io.emit('state', payload()); }
   });
 
   socket.on('back', () => {
-    if (state.idx > 0) {
-      state.idx--;
-      io.emit('state', payload());
-    }
+    if (state.idx > 0) { state.idx--; io.emit('state', payload()); }
   });
 
   socket.on('reset', () => {
-    const user = state.users[socket.id];
-    if (socket.isAdmin || (user && user.admin)) {
-      state.idx = 0;
-      io.emit('state', payload());
+    if (socket.isAdmin) { state.idx = 0; io.emit('state', payload()); }
+  });
+
+  // ── Play Manager events (admin only) ───────────────────────────────────────
+
+  socket.on('pm:list', (_, cb) => {
+    if (!socket.isAdmin) return cb({ ok:false, err:'Not admin' });
+    cb({ ok:true, scripts: scriptListPayload() });
+  });
+
+  socket.on('pm:set-active', ({ scriptId }, cb) => {
+    if (!socket.isAdmin) return cb({ ok:false, err:'Not admin' });
+    if (!scripts.has(scriptId)) return cb({ ok:false, err:'Script not found' });
+    activeScriptId = scriptId;
+    broadcastScriptChange();
+    cb({ ok:true, scripts: scriptListPayload() });
+  });
+
+  socket.on('pm:delete', ({ scriptId }, cb) => {
+    if (!socket.isAdmin) return cb({ ok:false, err:'Not admin' });
+    const s = scripts.get(scriptId);
+    if (!s) return cb({ ok:false, err:'Script not found' });
+    if (s.isDefault) return cb({ ok:false, err:'Cannot delete the default script' });
+    scripts.delete(scriptId);
+    if (activeScriptId === scriptId) {
+      activeScriptId = 'default';
+      broadcastScriptChange();
     }
+    cb({ ok:true, scripts: scriptListPayload() });
+  });
+
+  socket.on('pm:upload', ({ name, content, format }, cb) => {
+    if (!socket.isAdmin) return cb({ ok:false, err:'Not admin' });
+    try {
+      let beats;
+      if (format === 'json') {
+        const data = JSON.parse(content);
+        beats = Array.isArray(data) ? data : (data.beats || []);
+        beats = beats.map((b,i) => ({...b, id:i}));
+        if (!name && data.title) name = data.title;
+      } else {
+        beats = parseUploadedTxt(content);
+      }
+      if (!beats.length) return cb({ ok:false, err:'No valid content found in file' });
+      const id = 'script_'+(nextScriptId++);
+      const cast = extractCast(beats);
+      const castInfo = makeCastInfo(cast);
+      scripts.set(id, { id, name: name||'Untitled Play', beats, cast, castInfo, isDefault:false });
+      cb({ ok:true, scripts: scriptListPayload() });
+    } catch(e) {
+      cb({ ok:false, err: e.message });
+    }
+  });
+
+  socket.on('pm:generate', async ({ premise }, cb) => {
+    if (!socket.isAdmin) return cb({ ok:false, err:'Not admin' });
+    if (!premise?.trim()) return cb({ ok:false, err:'Please enter a premise' });
+    try {
+      const raw = await generateWithGemini(premise.trim());
+      const beats = parseStandardFormat(raw);
+      if (!beats.length) return cb({ ok:false, err:'AI generated content but it could not be parsed into a script' });
+      const id = 'script_'+(nextScriptId++);
+      const cast = extractCast(beats);
+      const castInfo = makeCastInfo(cast);
+      const name = premise.trim().slice(0,60) + (premise.length>60?'...':'');
+      scripts.set(id, { id, name, beats, cast, castInfo, isDefault:false });
+      cb({ ok:true, scripts: scriptListPayload() });
+    } catch(e) {
+      cb({ ok:false, err: e.message });
+    }
+  });
+
+  socket.on('pm:export', ({ scriptId }, cb) => {
+    if (!socket.isAdmin) return cb({ ok:false, err:'Not admin' });
+    const s = scripts.get(scriptId);
+    if (!s) return cb({ ok:false, err:'Script not found' });
+    cb({ ok:true, name: s.name, text: exportScript(s) });
   });
 
   socket.on('disconnect', () => {
@@ -479,6 +700,6 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('║   Radio Play Performance App             ║');
   console.log('╚══════════════════════════════════════════╝\n');
   console.log(`  Local:    http://localhost:${PORT}`);
-  ips.forEach(ip => console.log(`  Network:  http://${ip}:${PORT}  ← share this`));
+  ips.forEach(ip => console.log(`  Network:  http://${ip}:${PORT}  <- share this`));
   console.log('\n  Share the Network URL with other performers.\n');
 });

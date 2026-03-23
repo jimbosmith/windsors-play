@@ -6,618 +6,216 @@
   <title>The Windsors: The Rebrand</title>
   <style>
     :root {
-      --bg:           #0d1117;
-      --card:         #161b22;
-      --border:       #30363d;
-      --text:         #e6edf3;
-      --text-dim:     #7d8590;
-      --gold:         #d4a017;
-      --gold-dim:     #7a5c0b;
-      --sfx-bg:       #1f1200;
-      --sfx-border:   #5a3500;
-      --sfx-text:     #f0950a;
-      --scene-bg:     #0d0d1f;
-      --scene-border: #3d2080;
-      --scene-text:   #a78bfa;
-      --section-bg:   #0f1a0f;
-      --section-border:#265226;
-      --section-text: #6bcf7f;
-      --my-line-bg:   #0a1f12;
-      --my-line-border:#1a6b3a;
-      --btn-done-bg:  #14532d;
-      --btn-done-border:#166534;
-      --btn-done-text:#86efac;
-      --btn-next-bg:  #1c2333;
-      --btn-next-border:#30363d;
-      --btn-next-text:#8b949e;
-      --btn-back-bg:  transparent;
+      --bg:#0d1117; --card:#161b22; --border:#30363d;
+      --text:#e6edf3; --text-dim:#7d8590;
+      --gold:#d4a017; --gold-dim:#7a5c0b;
+      --sfx-bg:#1f1200; --sfx-border:#4a2a00; --sfx-text:#f0950a;
+      --scene-bg:#0d0d1f; --scene-border:#3d2080; --scene-text:#a78bfa;
+      --section-bg:#0f1a0f; --section-border:#265226; --section-text:#6bcf7f;
+      --my-line-bg:#0a1f12; --my-line-border:#1a6b3a;
+      --btn-done-bg:#14532d; --btn-done-border:#166534; --btn-done-text:#86efac;
+      --btn-next-bg:#1c2333; --btn-next-border:#30363d; --btn-next-text:#8b949e;
     }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:Georgia,'Times New Roman',serif;-webkit-text-size-adjust:100%;overflow:hidden}
+    #app{height:100vh;height:100dvh;display:flex;flex-direction:column}
+    .screen{display:flex;flex-direction:column;height:100%}
+    .screen[hidden]{display:none!important}
+    ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ── JOIN SCREEN ── */
+    #join-screen{overflow-y:auto;padding:20px 16px 32px;gap:16px}
+    .banner{text-align:center;padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:4px}
+    .banner-crown{font-size:2.2em;line-height:1;margin-bottom:6px}
+    .banner-title{font-size:1.35em;color:var(--gold);font-weight:bold;letter-spacing:.06em}
+    .banner-subtitle{font-size:.8em;color:var(--text-dim);font-style:italic;margin-top:4px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 16px;margin-bottom:16px}
+    .card-title{font-size:.7em;color:var(--text-dim);text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px}
+    select{width:100%;padding:11px 12px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:1em;font-family:Georgia,serif;appearance:none;-webkit-appearance:none;cursor:pointer;outline:none}
+    select:focus{border-color:var(--gold-dim)}
+    .char-desc{margin-top:8px;min-height:2em;font-size:.78em;color:var(--text-dim);font-style:italic;line-height:1.4}
+    .btn-join{width:100%;margin-top:14px;padding:15px;background:#21104a;color:#d8b4fe;border:1px solid #6d28d9;border-radius:10px;font-size:1.05em;font-family:Georgia,serif;cursor:pointer;letter-spacing:.04em;transition:background .15s}
+    .btn-join:active{background:#2e1470}
+    .cast-list{display:flex;flex-direction:column;gap:2px}
+    .cast-row{display:flex;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);gap:10px}
+    .cast-row:last-child{border-bottom:none}
+    .cast-row-char{font-size:.82em;font-weight:bold;color:var(--gold);min-width:90px}
+    .cast-row-player{font-size:.78em;color:var(--text-dim);font-style:italic}
 
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Georgia, 'Times New Roman', serif;
-      -webkit-text-size-adjust: 100%;
-      overflow: hidden;
-    }
+    /* ── PLAY SCREEN ── */
+    #play-screen{overflow:hidden}
+    .play-header{flex-shrink:0;background:var(--card);border-bottom:1px solid var(--border);padding:8px 14px 6px}
+    .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+    .scene-label{font-size:.7em;color:var(--scene-text);letter-spacing:.08em;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px}
+    .beat-counter{font-size:.68em;color:var(--text-dim);white-space:nowrap}
+    .progress-bar{height:2px;background:var(--border);border-radius:2px}
+    .progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .4s ease}
+    .script-scroll{flex:1;overflow-y:auto;padding:12px 14px 8px;display:flex;flex-direction:column}
 
-    #app {
-      height: 100vh;
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-    }
+    /* Beats */
+    .beat{margin-bottom:10px;border-radius:10px;overflow:hidden}
+    .beat.history{opacity:.28}.beat.current{opacity:1}
+    .sfx-box{background:var(--sfx-bg);border:1px solid var(--sfx-border);border-radius:10px;padding:11px 14px;display:flex;gap:10px;align-items:flex-start}
+    .sfx-icon{font-size:1.1em;flex-shrink:0;margin-top:1px}
+    .sfx-label{display:block;font-size:.65em;text-transform:uppercase;letter-spacing:.12em;color:var(--sfx-text);opacity:.65;margin-bottom:3px}
+    .sfx-text{color:var(--sfx-text);font-style:italic;font-size:.9em;line-height:1.45}
+    .scene-box{background:var(--scene-bg);border:1px solid var(--scene-border);border-radius:10px;padding:12px 16px;text-align:center}
+    .scene-box-text{color:var(--scene-text);font-size:.82em;text-transform:uppercase;letter-spacing:.1em}
+    .section-box{background:var(--section-bg);border:1px solid var(--section-border);border-radius:10px;padding:10px 16px;text-align:center}
+    .section-box-text{color:var(--section-text);font-size:.82em;letter-spacing:.06em}
+    .dialogue-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 15px}
+    .dialogue-box.my-line{background:var(--my-line-bg);border-color:var(--my-line-border)}
+    .char-name{font-size:.72em;font-weight:bold;color:var(--gold);text-transform:uppercase;letter-spacing:.12em;margin-bottom:7px}
+    .dialogue-text{font-size:1.05em;line-height:1.55}
+    .stage-dir{color:var(--text-dim);font-style:italic;font-size:.9em}
 
-    .screen { display: flex; flex-direction: column; height: 100%; }
-    .screen[hidden] { display: none !important; }
+    /* Action bar */
+    .action-bar{flex-shrink:0;background:var(--card);border-top:1px solid var(--border);padding:10px 14px 12px}
+    .status-msg{text-align:center;font-size:.8em;color:var(--text-dim);font-style:italic;margin-bottom:9px;line-height:1.3}
+    .status-msg.your-turn{color:#4ade80;font-style:normal;font-weight:bold;font-size:.88em}
+    .status-msg.sfx-turn{color:var(--sfx-text);font-style:normal}
+    .btn-row{display:flex;gap:8px;margin-bottom:8px}
+    .btn-done{flex:1;padding:15px 10px;background:var(--btn-done-bg);color:var(--btn-done-text);border:1px solid var(--btn-done-border);border-radius:10px;font-size:1em;font-family:Georgia,serif;cursor:pointer;transition:background .15s}
+    .btn-done:active{background:#166534}
+    .btn-next{flex:1;padding:15px 10px;background:var(--btn-next-bg);color:var(--btn-next-text);border:1px solid var(--btn-next-border);border-radius:10px;font-size:1em;font-family:Georgia,serif;cursor:pointer;transition:background .15s}
+    .btn-next:active{background:#252d3e}
+    .btn-back{padding:12px 16px;background:transparent;color:var(--text-dim);border:1px solid var(--border);border-radius:10px;font-size:.85em;font-family:Georgia,serif;cursor:pointer;white-space:nowrap;transition:background .15s}
+    .btn-back:active{background:var(--card)}
+    .footer-bar{display:flex;align-items:center;justify-content:space-between;padding-top:6px;border-top:1px solid var(--border);margin-top:2px}
+    .my-role{display:flex;align-items:center;gap:6px}
+    .my-role-label{font-size:.65em;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em}
+    .my-role-char{font-size:.82em;color:var(--gold);font-weight:bold}
+    .online-pill{font-size:.65em;color:var(--text-dim);background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:3px 8px;cursor:pointer}
 
-    /* ── Scrollbar ── */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    /* ── Admin shared ── */
+    .admin-toggle{font-size:.7em;color:var(--text-dim);cursor:pointer;text-align:center;padding:4px}
+    .admin-login-row{display:none;gap:6px;margin-top:6px}
+    .admin-login-row.show{display:flex}
+    .admin-input{flex:1;padding:8px 10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:.85em;font-family:Georgia,serif;outline:none}
+    .admin-input:focus{border-color:var(--gold-dim)}
+    .btn-admin-login{padding:8px 14px;background:#3b1a1a;color:#fca5a5;border:1px solid #7f1d1d;border-radius:8px;font-size:.8em;font-family:Georgia,serif;cursor:pointer;white-space:nowrap}
+    .admin-err{font-size:.72em;color:#ef4444;margin-top:4px;display:none}
+    .admin-badge{font-size:.6em;color:#fca5a5;background:#3b1a1a;border:1px solid #7f1d1d;border-radius:10px;padding:2px 7px;margin-left:6px;vertical-align:middle}
+    .btn-reset{width:100%;margin-top:8px;padding:12px;background:#3b1a1a;color:#fca5a5;border:1px solid #7f1d1d;border-radius:10px;font-size:.9em;font-family:Georgia,serif;cursor:pointer}
+    .btn-reset:active{background:#5a2020}
+    .btn-pm-open{width:100%;margin-top:8px;padding:12px;background:#1a1a3b;color:#a5b4fc;border:1px solid #312e81;border-radius:10px;font-size:.9em;font-family:Georgia,serif;cursor:pointer}
+    .btn-pm-open:active{background:#2a2a5b}
 
-    /* ═══════════════════════════════════════════════
-       JOIN SCREEN
-    ═══════════════════════════════════════════════ */
+    /* ── Overlays ── */
+    .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);align-items:flex-end;justify-content:center;z-index:50}
+    .overlay.show{display:flex}
+    .overlay-card{background:var(--card);border:1px solid var(--border);border-radius:16px 16px 0 0;padding:20px 20px 32px;width:100%;max-height:75vh;overflow-y:auto}
+    .overlay-title{font-size:.72em;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+    .overlay-close{cursor:pointer;font-size:1.2em;color:var(--text-dim)}
 
-    #join-screen {
-      overflow-y: auto;
-      padding: 20px 16px 32px;
-      gap: 16px;
-    }
+    /* End overlay */
+    #end-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);align-items:center;justify-content:center;z-index:100;padding:24px}
+    #end-overlay.show{display:flex}
+    .end-card{background:var(--card);border:1px solid var(--gold-dim);border-radius:16px;padding:32px 24px;text-align:center;max-width:320px;width:100%}
+    .end-crown{font-size:3em;margin-bottom:12px}
+    .end-title{color:var(--gold);font-size:1.3em;margin-bottom:8px}
+    .end-sub{color:var(--text-dim);font-size:.85em;line-height:1.5}
+    .btn-restart{margin-top:20px;padding:12px 24px;background:#21104a;color:#d8b4fe;border:1px solid #6d28d9;border-radius:10px;font-size:.95em;font-family:Georgia,serif;cursor:pointer}
 
-    .banner {
-      text-align: center;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 4px;
-    }
-    .banner-crown { font-size: 2.2em; line-height: 1; margin-bottom: 6px; }
-    .banner-title {
-      font-size: 1.35em;
-      color: var(--gold);
-      font-weight: bold;
-      letter-spacing: 0.06em;
-    }
-    .banner-subtitle {
-      font-size: 0.8em;
-      color: var(--text-dim);
-      font-style: italic;
-      margin-top: 4px;
-    }
+    /* ── Play Manager Modal ── */
+    #pm-overlay{align-items:center;z-index:80}
+    #pm-overlay .overlay-card{border-radius:16px;max-height:85vh;max-width:500px}
+    .pm-section{margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+    .pm-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+    .pm-section-title{font-size:.72em;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;font-weight:bold}
+    .pm-textarea{width:100%;min-height:60px;padding:10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-family:Georgia,serif;font-size:.9em;resize:vertical;outline:none}
+    .pm-textarea:focus{border-color:var(--gold-dim)}
+    .pm-text-input{width:100%;padding:9px 10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-family:Georgia,serif;font-size:.85em;outline:none;margin-bottom:8px}
+    .pm-text-input:focus{border-color:var(--gold-dim)}
+    .pm-file-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+    .pm-file-label{flex:1;padding:10px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;text-align:center;font-size:.8em;color:var(--text-dim);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .pm-file-label:hover{border-color:var(--gold-dim)}
+    .pm-file-label.has-file{color:var(--text);border-style:solid;border-color:var(--gold-dim)}
+    input[type="file"]{display:none}
+    .btn-pm{padding:10px 16px;border-radius:8px;font-size:.85em;font-family:Georgia,serif;cursor:pointer;border:1px solid;transition:background .15s}
+    .btn-pm-primary{background:#1a1a3b;color:#a5b4fc;border-color:#312e81}
+    .btn-pm-primary:active{background:#2a2a5b}
+    .btn-pm-primary:disabled{opacity:.4;cursor:default}
+    .pm-status{font-size:.75em;margin-top:6px;min-height:1.2em;line-height:1.3}
+    .pm-status.ok{color:#4ade80}.pm-status.err{color:#ef4444}.pm-status.loading{color:#a5b4fc;font-style:italic}
+    .pm-btn-row{display:flex;gap:6px;margin-top:8px}
 
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 18px 16px;
-      margin-bottom: 16px;
-    }
-    .card-title {
-      font-size: 0.7em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      margin-bottom: 12px;
-    }
+    /* Script list items */
+    .pm-script{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px}
+    .pm-script.active{border-color:var(--gold-dim);background:#111a11}
+    .pm-script-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap}
+    .pm-script-name{font-size:.9em;font-weight:bold;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .pm-badge{font-size:.6em;padding:2px 6px;border-radius:8px;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+    .pm-badge-active{background:#14532d;color:#86efac;border:1px solid #166534}
+    .pm-badge-default{background:#1e293b;color:#94a3b8;border:1px solid #334155}
+    .pm-script-meta{font-size:.7em;color:var(--text-dim);margin-bottom:8px}
+    .pm-script-actions{display:flex;gap:6px}
+    .pm-btn-sm{padding:6px 10px;border-radius:6px;font-size:.75em;font-family:Georgia,serif;cursor:pointer;border:1px solid;transition:background .15s}
+    .pm-btn-set{background:#14532d;color:#86efac;border-color:#166534}
+    .pm-btn-set:active{background:#166534}
+    .pm-btn-dl{background:#1e293b;color:#94a3b8;border-color:#334155}
+    .pm-btn-dl:active{background:#2a3548}
+    .pm-btn-del{background:#3b1a1a;color:#fca5a5;border-color:#7f1d1d}
+    .pm-btn-del:active{background:#5a2020}
 
-    select {
-      width: 100%;
-      padding: 11px 12px;
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 1em;
-      font-family: Georgia, serif;
-      appearance: none;
-      -webkit-appearance: none;
-      cursor: pointer;
-      outline: none;
-    }
-    select:focus { border-color: var(--gold-dim); }
-
-    .char-desc {
-      margin-top: 8px;
-      min-height: 2em;
-      font-size: 0.78em;
-      color: var(--text-dim);
-      font-style: italic;
-      line-height: 1.4;
-    }
-
-    .btn-join {
-      width: 100%;
-      margin-top: 14px;
-      padding: 15px;
-      background: #21104a;
-      color: #d8b4fe;
-      border: 1px solid #6d28d9;
-      border-radius: 10px;
-      font-size: 1.05em;
-      font-family: Georgia, serif;
-      cursor: pointer;
-      letter-spacing: 0.04em;
-      transition: background 0.15s;
-    }
-    .btn-join:active { background: #2e1470; }
-
-    .cast-list { display: flex; flex-direction: column; gap: 2px; }
-    .cast-row {
-      display: flex;
-      align-items: center;
-      padding: 7px 0;
-      border-bottom: 1px solid var(--border);
-      gap: 10px;
-    }
-    .cast-row:last-child { border-bottom: none; }
-    .cast-row-char {
-      font-size: 0.82em;
-      font-weight: bold;
-      color: var(--gold);
-      min-width: 90px;
-    }
-    .cast-row-player {
-      font-size: 0.78em;
-      color: var(--text-dim);
-      font-style: italic;
-    }
-    .cast-row-empty {
-      font-size: 0.78em;
-      color: #3d3d50;
-      font-style: italic;
-    }
-
-    /* ═══════════════════════════════════════════════
-       PLAY SCREEN
-    ═══════════════════════════════════════════════ */
-
-    #play-screen { overflow: hidden; }
-
-    /* Header */
-    .play-header {
-      flex-shrink: 0;
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      padding: 8px 14px 6px;
-    }
-    .header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 5px;
-    }
-    .scene-label {
-      font-size: 0.7em;
-      color: var(--scene-text);
-      letter-spacing: 0.08em;
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-right: 8px;
-    }
-    .beat-counter {
-      font-size: 0.68em;
-      color: var(--text-dim);
-      white-space: nowrap;
-    }
-    .progress-bar {
-      height: 2px;
-      background: var(--border);
-      border-radius: 2px;
-    }
-    .progress-fill {
-      height: 100%;
-      background: var(--gold);
-      border-radius: 2px;
-      transition: width 0.4s ease;
-    }
-
-    /* Script scroll area */
-    .script-scroll {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px 14px 8px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* ── Beat cards ── */
-    .beat { margin-bottom: 10px; border-radius: 10px; overflow: hidden; }
-    .beat.history { opacity: 0.28; }
-    .beat.current { opacity: 1; }
-
-    /* SFX */
-    .sfx-box {
-      background: var(--sfx-bg);
-      border: 1px solid var(--sfx-border);
-      border-radius: 10px;
-      padding: 11px 14px;
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-    }
-    .sfx-icon { font-size: 1.1em; flex-shrink: 0; margin-top: 1px; }
-    .sfx-label {
-      display: block;
-      font-size: 0.65em;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--sfx-text);
-      opacity: 0.65;
-      margin-bottom: 3px;
-    }
-    .sfx-text {
-      color: var(--sfx-text);
-      font-style: italic;
-      font-size: 0.9em;
-      line-height: 1.45;
-    }
-
-    /* Scene header */
-    .scene-box {
-      background: var(--scene-bg);
-      border: 1px solid var(--scene-border);
-      border-radius: 10px;
-      padding: 12px 16px;
-      text-align: center;
-    }
-    .scene-box-text {
-      color: var(--scene-text);
-      font-size: 0.82em;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    /* Section (Part One: ...) */
-    .section-box {
-      background: var(--section-bg);
-      border: 1px solid var(--section-border);
-      border-radius: 10px;
-      padding: 10px 16px;
-      text-align: center;
-    }
-    .section-box-text {
-      color: var(--section-text);
-      font-size: 0.82em;
-      letter-spacing: 0.06em;
-    }
-
-    /* Dialogue */
-    .dialogue-box {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 13px 15px;
-    }
-    .dialogue-box.my-line {
-      background: var(--my-line-bg);
-      border-color: var(--my-line-border);
-    }
-    .char-name {
-      font-size: 0.72em;
-      font-weight: bold;
-      color: var(--gold);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      margin-bottom: 7px;
-    }
-    .dialogue-text {
-      font-size: 1.05em;
-      line-height: 1.55;
-    }
-    .stage-dir {
-      color: var(--text-dim);
-      font-style: italic;
-      font-size: 0.9em;
-    }
-
-    /* ── Action bar ── */
-    .action-bar {
-      flex-shrink: 0;
-      background: var(--card);
-      border-top: 1px solid var(--border);
-      padding: 10px 14px 12px;
-    }
-
-    .status-msg {
-      text-align: center;
-      font-size: 0.8em;
-      color: var(--text-dim);
-      font-style: italic;
-      margin-bottom: 9px;
-      line-height: 1.3;
-    }
-    .status-msg.your-turn {
-      color: #4ade80;
-      font-style: normal;
-      font-weight: bold;
-      font-size: 0.88em;
-    }
-    .status-msg.sfx-turn {
-      color: var(--sfx-text);
-      font-style: normal;
-    }
-
-    .btn-row { display: flex; gap: 8px; margin-bottom: 8px; }
-
-    .btn-done {
-      flex: 1;
-      padding: 15px 10px;
-      background: var(--btn-done-bg);
-      color: var(--btn-done-text);
-      border: 1px solid var(--btn-done-border);
-      border-radius: 10px;
-      font-size: 1em;
-      font-family: Georgia, serif;
-      cursor: pointer;
-      letter-spacing: 0.02em;
-      transition: background 0.15s;
-    }
-    .btn-done:active { background: #166534; }
-
-    .btn-next {
-      flex: 1;
-      padding: 15px 10px;
-      background: var(--btn-next-bg);
-      color: var(--btn-next-text);
-      border: 1px solid var(--btn-next-border);
-      border-radius: 10px;
-      font-size: 1em;
-      font-family: Georgia, serif;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .btn-next:active { background: #252d3e; }
-
-    .btn-back {
-      padding: 12px 16px;
-      background: var(--btn-back-bg);
-      color: var(--text-dim);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      font-size: 0.85em;
-      font-family: Georgia, serif;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.15s;
-    }
-    .btn-back:active { background: var(--card); }
-
-    /* Footer bar */
-    .footer-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: 6px;
-      border-top: 1px solid var(--border);
-      margin-top: 2px;
-    }
-    .my-role {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .my-role-label {
-      font-size: 0.65em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-    .my-role-char {
-      font-size: 0.82em;
-      color: var(--gold);
-      font-weight: bold;
-    }
-    .online-pill {
-      font-size: 0.65em;
-      color: var(--text-dim);
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 3px 8px;
-      cursor: pointer;
-    }
-
-    /* ── Online overlay ── */
-    .overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      align-items: flex-end;
-      justify-content: center;
-      z-index: 50;
-      padding: 0 0 0 0;
-    }
-    .overlay.show { display: flex; }
-    .overlay-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px 16px 0 0;
-      padding: 20px 20px 32px;
-      width: 100%;
-      max-height: 75vh;
-      overflow-y: auto;
-    }
-    .overlay-title {
-      font-size: 0.72em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .overlay-close { cursor: pointer; font-size: 1.2em; color: var(--text-dim); }
-
-    /* ── End screen ── */
-    #end-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.88);
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      padding: 24px;
-    }
-    #end-overlay.show { display: flex; }
-    .end-card {
-      background: var(--card);
-      border: 1px solid var(--gold-dim);
-      border-radius: 16px;
-      padding: 32px 24px;
-      text-align: center;
-      max-width: 320px;
-      width: 100%;
-    }
-    .end-crown { font-size: 3em; margin-bottom: 12px; }
-    .end-title { color: var(--gold); font-size: 1.3em; margin-bottom: 8px; }
-    .end-sub { color: var(--text-dim); font-size: 0.85em; line-height: 1.5; }
-    .btn-restart {
-      margin-top: 20px;
-      padding: 12px 24px;
-      background: #21104a;
-      color: #d8b4fe;
-      border: 1px solid #6d28d9;
-      border-radius: 10px;
-      font-size: 0.95em;
-      font-family: Georgia, serif;
-      cursor: pointer;
-    }
-
-    /* ── Admin ── */
-    .admin-section {
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid var(--border);
-    }
-    .admin-toggle {
-      font-size: 0.7em;
-      color: var(--text-dim);
-      cursor: pointer;
-      text-align: center;
-      padding: 4px;
-    }
-    .admin-login-row {
-      display: none;
-      gap: 6px;
-      margin-top: 6px;
-    }
-    .admin-login-row.show { display: flex; }
-    .admin-input {
-      flex: 1;
-      padding: 8px 10px;
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 0.85em;
-      font-family: Georgia, serif;
-      outline: none;
-    }
-    .admin-input:focus { border-color: var(--gold-dim); }
-    .btn-admin-login {
-      padding: 8px 14px;
-      background: #3b1a1a;
-      color: #fca5a5;
-      border: 1px solid #7f1d1d;
-      border-radius: 8px;
-      font-size: 0.8em;
-      font-family: Georgia, serif;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .admin-err {
-      font-size: 0.72em;
-      color: #ef4444;
-      margin-top: 4px;
-      display: none;
-    }
-    .admin-badge {
-      font-size: 0.6em;
-      color: #fca5a5;
-      background: #3b1a1a;
-      border: 1px solid #7f1d1d;
-      border-radius: 10px;
-      padding: 2px 7px;
-      margin-left: 6px;
-      vertical-align: middle;
-    }
-    .btn-reset {
-      width: 100%;
-      margin-top: 8px;
-      padding: 12px;
-      background: #3b1a1a;
-      color: #fca5a5;
-      border: 1px solid #7f1d1d;
-      border-radius: 10px;
-      font-size: 0.9em;
-      font-family: Georgia, serif;
-      cursor: pointer;
-    }
-    .btn-reset:active { background: #5a2020; }
+    /* Delete confirmation */
+    #delete-overlay{align-items:center;z-index:90}
+    .delete-card{background:var(--card);border:1px solid #7f1d1d;border-radius:16px;padding:28px 24px;text-align:center;max-width:300px;width:100%}
+    .delete-title{color:#fca5a5;font-size:1.1em;margin-bottom:10px}
+    .delete-msg{color:var(--text-dim);font-size:.85em;margin-bottom:18px;line-height:1.4}
+    .delete-btns{display:flex;gap:10px;justify-content:center}
+    .btn-del-cancel{padding:10px 20px;background:var(--bg);color:var(--text-dim);border:1px solid var(--border);border-radius:8px;font-family:Georgia,serif;font-size:.9em;cursor:pointer}
+    .btn-del-confirm{padding:10px 20px;background:#7f1d1d;color:#fca5a5;border:1px solid #991b1b;border-radius:8px;font-family:Georgia,serif;font-size:.9em;cursor:pointer}
+    .btn-del-confirm:active{background:#991b1b}
   </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- ═══════════════════════════════════════════
-       JOIN SCREEN
-  ═══════════════════════════════════════════ -->
+  <!-- ══════ JOIN SCREEN ══════ -->
   <div id="join-screen" class="screen">
     <div class="banner">
-      <div class="banner-crown">♛</div>
+      <div class="banner-crown">&#9819;</div>
       <div class="banner-title">THE WINDSORS</div>
-      <div class="banner-subtitle">"The Rebrand" — A Pastiche Radio Play in One Act</div>
+      <div class="banner-subtitle">"The Rebrand" &mdash; A Pastiche Radio Play in One Act</div>
     </div>
 
     <div class="card">
       <div class="card-title">Choose your character</div>
-      <select id="char-select">
-        <option value="">— Select a character —</option>
-      </select>
+      <select id="char-select"><option value="">&mdash; Select a character &mdash;</option></select>
       <div id="char-desc" class="char-desc"></div>
       <button class="btn-join" id="join-btn" disabled>Join the Cast</button>
     </div>
 
     <div class="card" id="cast-card">
       <div class="card-title">Cast online</div>
-      <div class="cast-list" id="cast-list">
-        <div class="cast-row-empty" style="font-size:0.8em; color:var(--text-dim);">No one has joined yet.</div>
-      </div>
+      <div class="cast-list" id="cast-list"><div style="font-size:.8em;color:var(--text-dim);padding:4px 0;">No one has joined yet.</div></div>
     </div>
 
-    <div class="card" id="join-admin-section">
+    <!-- Admin on join screen -->
+    <div class="card" id="join-admin-card">
       <div class="admin-toggle" id="join-admin-toggle">Admin</div>
       <div class="admin-login-row" id="join-admin-login-row">
         <input type="password" class="admin-input" id="join-admin-pw" placeholder="Admin password">
         <button class="btn-admin-login" id="btn-join-admin-login">Unlock</button>
       </div>
       <div class="admin-err" id="join-admin-err">Wrong password</div>
-      <button class="btn-reset" id="btn-join-reset" style="display:none">↺ Reset Play to Start</button>
-      <span class="admin-badge" id="join-admin-badge" style="display:none">ADMIN</span>
+      <div id="join-admin-controls" style="display:none">
+        <span class="admin-badge">ADMIN</span>
+        <button class="btn-reset" id="btn-join-reset">&#8634; Reset Play to Start</button>
+        <button class="btn-pm-open" id="btn-join-pm">&#9835; Play Manager</button>
+      </div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════
-       PLAY SCREEN
-  ═══════════════════════════════════════════ -->
+  <!-- ══════ PLAY SCREEN ══════ -->
   <div id="play-screen" class="screen" hidden>
     <div class="play-header">
       <div class="header-top">
-        <div class="scene-label" id="scene-label">—</div>
-        <div class="beat-counter" id="beat-counter">—</div>
+        <div class="scene-label" id="scene-label">&mdash;</div>
+        <div class="beat-counter" id="beat-counter">&mdash;</div>
       </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
-      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
     </div>
 
     <div class="script-scroll" id="script-scroll"></div>
@@ -625,410 +223,350 @@
     <div class="action-bar">
       <div class="status-msg" id="status-msg"></div>
       <div class="btn-row">
-        <button class="btn-done" id="btn-done" style="display:none">✓ Done Reading</button>
-        <button class="btn-next" id="btn-next">Next ▶</button>
-        <button class="btn-back" id="btn-back">◀</button>
+        <button class="btn-done" id="btn-done" style="display:none">&#10003; Done Reading</button>
+        <button class="btn-next" id="btn-next">Next &#9654;</button>
+        <button class="btn-back" id="btn-back">&#9664;</button>
       </div>
       <div class="footer-bar">
         <div class="my-role">
           <span class="my-role-label">Playing:</span>
-          <span class="my-role-char" id="my-role-char">—</span>
+          <span class="my-role-char" id="my-role-char">&mdash;</span>
           <span class="admin-badge" id="admin-badge" style="display:none">ADMIN</span>
         </div>
         <div class="online-pill" id="online-pill">0 online</div>
       </div>
-
-      <!-- Admin controls -->
-      <div class="admin-section" id="admin-section">
-        <div class="admin-toggle" id="admin-toggle">Admin</div>
-        <div class="admin-login-row" id="admin-login-row">
-          <input type="password" class="admin-input" id="admin-pw" placeholder="Admin password">
-          <button class="btn-admin-login" id="btn-admin-login">Unlock</button>
+      <!-- Admin on play screen -->
+      <div class="admin-section" id="play-admin-section">
+        <div class="admin-toggle" id="play-admin-toggle">Admin</div>
+        <div class="admin-login-row" id="play-admin-login-row">
+          <input type="password" class="admin-input" id="play-admin-pw" placeholder="Admin password">
+          <button class="btn-admin-login" id="btn-play-admin-login">Unlock</button>
         </div>
-        <div class="admin-err" id="admin-err">Wrong password</div>
-        <button class="btn-reset" id="btn-reset" style="display:none">↺ Reset to Start</button>
+        <div class="admin-err" id="play-admin-err">Wrong password</div>
+        <div id="play-admin-controls" style="display:none">
+          <button class="btn-reset" id="btn-play-reset">&#8634; Reset to Start</button>
+          <button class="btn-pm-open" id="btn-play-pm">&#9835; Play Manager</button>
+        </div>
       </div>
     </div>
   </div>
-
 </div>
 
-<!-- Online users overlay -->
+<!-- ══════ ONLINE OVERLAY ══════ -->
 <div class="overlay" id="online-overlay">
   <div class="overlay-card">
-    <div class="overlay-title">
-      <span>Performers Online</span>
-      <span class="overlay-close" id="overlay-close">✕</span>
-    </div>
+    <div class="overlay-title"><span>Performers Online</span><span class="overlay-close" id="overlay-close">&#10005;</span></div>
     <div class="cast-list" id="overlay-cast-list"></div>
   </div>
 </div>
 
-<!-- End of play overlay -->
+<!-- ══════ END OVERLAY ══════ -->
 <div id="end-overlay">
   <div class="end-card">
-    <div class="end-crown">♛</div>
+    <div class="end-crown">&#9819;</div>
     <div class="end-title">End of Play</div>
-    <div class="end-sub">
-      "Long may it stagger."<br><br>
-      Thank you, Your Majesty.<br>God save the basil.
+    <div class="end-sub">"Long may it stagger."<br><br>Thank you, Your Majesty.<br>God save the basil.</div>
+    <button class="btn-restart" id="btn-restart">&#8634; Start Again</button>
+  </div>
+</div>
+
+<!-- ══════ PLAY MANAGER MODAL ══════ -->
+<div class="overlay" id="pm-overlay">
+  <div class="overlay-card">
+    <div class="overlay-title"><span>Play Manager</span><span class="overlay-close" id="pm-close">&#10005;</span></div>
+
+    <!-- AI Generate -->
+    <div class="pm-section">
+      <div class="pm-section-title">AI Generate Play</div>
+      <textarea id="pm-premise" class="pm-textarea" placeholder="Enter a comedic premise, e.g. 'A group of penguins trying to rob a bank'"></textarea>
+      <div class="pm-btn-row">
+        <button class="btn-pm btn-pm-primary" id="btn-pm-generate">Generate Play</button>
+      </div>
+      <div class="pm-status" id="pm-gen-status"></div>
     </div>
-    <button class="btn-restart" id="btn-restart">↺ Start Again</button>
+
+    <!-- Upload -->
+    <div class="pm-section">
+      <div class="pm-section-title">Upload Script</div>
+      <input type="text" class="pm-text-input" id="pm-upload-name" placeholder="Play name (optional)">
+      <div class="pm-file-row">
+        <label class="pm-file-label" id="pm-file-label">Choose .txt or .json file
+          <input type="file" id="pm-file" accept=".txt,.json">
+        </label>
+      </div>
+      <div class="pm-btn-row">
+        <button class="btn-pm btn-pm-primary" id="btn-pm-upload" disabled>Upload</button>
+      </div>
+      <div class="pm-status" id="pm-upload-status"></div>
+    </div>
+
+    <!-- Script List -->
+    <div class="pm-section">
+      <div class="pm-section-title">Available Scripts</div>
+      <div id="pm-script-list"><div style="color:var(--text-dim);font-size:.85em;">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ DELETE CONFIRMATION ══════ -->
+<div class="overlay" id="delete-overlay">
+  <div class="delete-card">
+    <div class="delete-title">Delete Script?</div>
+    <div class="delete-msg" id="delete-msg">This action cannot be undone.</div>
+    <div class="delete-btns">
+      <button class="btn-del-cancel" id="btn-del-cancel">Cancel</button>
+      <button class="btn-del-confirm" id="btn-del-confirm">Delete</button>
+    </div>
   </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
 'use strict';
-
 const socket = io();
 
 // ── State ─────────────────────────────────────────────────────────────────────
-let allBeats   = [];
-let castInfo   = {};
-let myChar     = null;
-let curState   = null;
-let curScene   = '';
-let isAdmin    = false;
+let allBeats=[], castInfo={}, myChar=null, curState=null, curScene='', isAdmin=false;
 
-// ── DOM refs ──────────────────────────────────────────────────────────────────
-const joinScreen   = document.getElementById('join-screen');
-const playScreen   = document.getElementById('play-screen');
-const charSelect   = document.getElementById('char-select');
-const charDesc     = document.getElementById('char-desc');
-const joinBtn      = document.getElementById('join-btn');
-const castListEl   = document.getElementById('cast-list');
-const sceneLabel   = document.getElementById('scene-label');
-const beatCounter  = document.getElementById('beat-counter');
-const progressFill = document.getElementById('progress-fill');
-const scriptScroll = document.getElementById('script-scroll');
-const statusMsg    = document.getElementById('status-msg');
-const btnDone      = document.getElementById('btn-done');
-const btnNext      = document.getElementById('btn-next');
-const btnBack      = document.getElementById('btn-back');
-const myRoleChar   = document.getElementById('my-role-char');
-const onlinePill   = document.getElementById('online-pill');
-const onlineOverlay= document.getElementById('online-overlay');
-const overlayClose = document.getElementById('overlay-close');
-const overlayCastList = document.getElementById('overlay-cast-list');
-const endOverlay   = document.getElementById('end-overlay');
-const btnRestart   = document.getElementById('btn-restart');
+// ── DOM ───────────────────────────────────────────────────────────────────────
+const $=id=>document.getElementById(id);
+const joinScreen=$('join-screen'), playScreen=$('play-screen');
+const charSelect=$('char-select'), charDesc=$('char-desc'), joinBtn=$('join-btn'), castListEl=$('cast-list');
+const sceneLabel=$('scene-label'), beatCounter=$('beat-counter'), progressFill=$('progress-fill');
+const scriptScroll=$('script-scroll'), statusMsg=$('status-msg');
+const btnDone=$('btn-done'), btnNext=$('btn-next'), btnBack=$('btn-back');
+const myRoleChar=$('my-role-char'), onlinePill=$('online-pill');
+const onlineOverlay=$('online-overlay'), overlayClose=$('overlay-close'), overlayCastList=$('overlay-cast-list');
+const endOverlay=$('end-overlay'), btnRestart=$('btn-restart');
+const adminBadge=$('admin-badge');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function esc(str) {
-  return String(str)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
-}
-
-function fmtDialogue(text) {
-  let t = esc(text);
-  t = t.replace(/(\([^)]+\))/g, '<em class="stage-dir">$1</em>');
-  t = t.replace(/\n/g, '<br>');
-  return t;
-}
-
-function beatHtml(beat, isCurrent) {
-  if (beat.type === 'sfx') {
-    return `<div class="sfx-box">
-      <div class="sfx-icon">🔊</div>
-      <div>
-        <span class="sfx-label">Sound Effect</span>
-        <span class="sfx-text">${esc(beat.text)}</span>
-      </div>
-    </div>`;
-  }
-  if (beat.type === 'scene') {
-    return `<div class="scene-box"><span class="scene-box-text">${esc(beat.text)}</span></div>`;
-  }
-  if (beat.type === 'section') {
-    return `<div class="section-box"><span class="section-box-text">${esc(beat.text)}</span></div>`;
-  }
-  if (beat.type === 'dialogue') {
-    const mine = myChar && (beat.character === myChar || beat.character === 'ALL');
-    return `<div class="dialogue-box${isCurrent && mine ? ' my-line' : ''}">
-      <div class="char-name">${esc(beat.character)}</div>
-      <div class="dialogue-text">${fmtDialogue(beat.text)}</div>
-    </div>`;
-  }
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function fmtDlg(t){let s=esc(t);s=s.replace(/(\([^)]+\))/g,'<em class="stage-dir">$1</em>');return s.replace(/\n/g,'<br>')}
+function beatHtml(b,cur){
+  if(b.type==='sfx') return `<div class="sfx-box"><div class="sfx-icon">&#128264;</div><div><span class="sfx-label">Sound Effect</span><span class="sfx-text">${esc(b.text)}</span></div></div>`;
+  if(b.type==='scene') return `<div class="scene-box"><span class="scene-box-text">${esc(b.text)}</span></div>`;
+  if(b.type==='section') return `<div class="section-box"><span class="section-box-text">${esc(b.text)}</span></div>`;
+  if(b.type==='dialogue'){const mine=myChar&&(b.character===myChar||b.character==='ALL');return `<div class="dialogue-box${cur&&mine?' my-line':''}"><div class="char-name">${esc(b.character)}</div><div class="dialogue-text">${fmtDlg(b.text)}</div></div>`}
   return '';
 }
 
-// ── Socket events ─────────────────────────────────────────────────────────────
-
-socket.on('init', ({ beats, castInfo: ci, cast }) => {
-  allBeats  = beats;
-  castInfo  = ci;
-  populateSelect(cast, ci);
+// ── Socket ────────────────────────────────────────────────────────────────────
+socket.on('init',({beats,castInfo:ci,cast})=>{allBeats=beats;castInfo=ci;populateSelect(cast,ci)});
+socket.on('state',state=>{
+  curState=state;
+  for(let i=state.idx;i>=0;i--){if(allBeats[i]&&allBeats[i].type==='scene'){curScene=allBeats[i].text;break}}
+  if(myChar!==null) renderPlay(state); else renderJoinCast(state.users);
+});
+socket.on('script-changed',({beats,castInfo:ci,cast,name})=>{
+  allBeats=beats; castInfo=ci;
+  populateSelect(cast,ci);
+  curScene='';
 });
 
-socket.on('state', state => {
-  curState = state;
+// ── Join ──────────────────────────────────────────────────────────────────────
+function populateSelect(cast,ci){
+  const val=charSelect.value;
+  charSelect.innerHTML='<option value="">&mdash; Select a character &mdash;</option>';
+  cast.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=ci[c]?ci[c].full:c;charSelect.appendChild(o)});
+  if(val&&[...charSelect.options].some(o=>o.value===val)) charSelect.value=val;
+  charSelect.dispatchEvent(new Event('change'));
+}
+charSelect.addEventListener('change',()=>{const c=charSelect.value;if(c&&castInfo[c]){charDesc.textContent=castInfo[c].desc;joinBtn.disabled=false}else{charDesc.textContent='';joinBtn.disabled=true}});
+joinBtn.addEventListener('click',()=>{const c=charSelect.value;if(!c)return;myChar=c;myRoleChar.textContent=castInfo[c]?castInfo[c].full:c;socket.emit('join',{character:c});joinScreen.hidden=true;playScreen.hidden=false;if(isAdmin)showAdminControls();if(curState)renderPlay(curState)});
+function renderJoinCast(users){
+  if(!users||!users.length){castListEl.innerHTML='<div style="font-size:.8em;color:var(--text-dim);padding:4px 0;">No one has joined yet.</div>';return}
+  const m={};users.forEach(u=>{m[u.character]=(m[u.character]||0)+1});
+  castListEl.innerHTML=Object.entries(m).map(([c,n])=>`<div class="cast-row"><span class="cast-row-char">${esc(castInfo[c]?castInfo[c].full:c)}</span><span class="cast-row-player">${n} performer${n>1?'s':''}</span></div>`).join('');
+}
 
-  // Update current scene label (scan back from current index)
-  for (let i = state.idx; i >= 0; i--) {
-    if (allBeats[i] && allBeats[i].type === 'scene') {
-      curScene = allBeats[i].text;
-      break;
-    }
-  }
+// ── Play ──────────────────────────────────────────────────────────────────────
+function renderPlay(st){
+  const b=st.beat, pct=st.total>1?Math.round(st.idx/(st.total-1)*100):100;
+  sceneLabel.textContent=curScene||st.activeScript||'—';
+  beatCounter.textContent=`${st.idx+1} / ${st.total}`;
+  progressFill.style.width=pct+'%';
+  const hs=Math.max(0,st.idx-4), hb=allBeats.slice(hs,st.idx);
+  scriptScroll.innerHTML='';
+  hb.forEach(x=>{const d=document.createElement('div');d.className='beat history';d.innerHTML=beatHtml(x,false);scriptScroll.appendChild(d)});
+  const cd=document.createElement('div');cd.className='beat current';cd.innerHTML=beatHtml(b,true);scriptScroll.appendChild(cd);
+  cd.scrollIntoView({behavior:'smooth',block:'end'});
+  renderActionBar(st);
+  onlinePill.textContent=`${st.users?st.users.length:0} online`;
+  renderOverlayCast(st.users);
+  if(st.ended)endOverlay.classList.add('show');else endOverlay.classList.remove('show');
+}
+function renderActionBar(st){
+  const b=st.beat;
+  const myTurn=b.type==='dialogue'&&myChar&&(b.character===myChar||b.character==='ALL');
+  const sfx=b.type==='sfx'||b.type==='scene'||b.type==='section';
+  if(myTurn){btnDone.style.display='';btnNext.style.display='none';statusMsg.textContent=`Your line${b.character==='ALL'?' (everyone speaks)':''}! Read it aloud, then press Done.`;statusMsg.className='status-msg your-turn'}
+  else if(sfx){btnDone.style.display='none';btnNext.style.display='';statusMsg.textContent=b.type==='sfx'?'Sound effect — press Next when ready.':'Press Next to continue.';statusMsg.className='status-msg'+(b.type==='sfx'?' sfx-turn':'')}
+  else{btnDone.style.display='none';btnNext.style.display='';const f=castInfo[b.character]?castInfo[b.character].full:b.character;statusMsg.textContent=`Waiting for ${f} to finish reading…`;statusMsg.className='status-msg'}
+  btnBack.disabled=st.idx===0;
+}
+function renderOverlayCast(users){
+  if(!users||!users.length){overlayCastList.innerHTML='<div style="color:var(--text-dim);font-size:.85em;">No one else is connected.</div>';return}
+  const m={};users.forEach(u=>{m[u.character]=(m[u.character]||0)+1});
+  overlayCastList.innerHTML=Object.entries(m).map(([c,n])=>`<div class="cast-row"><span class="cast-row-char">${esc(castInfo[c]?castInfo[c].full:c)}</span><span class="cast-row-player">${n} performer${n>1?'s':''}</span></div>`).join('');
+}
 
-  if (myChar !== null) {
-    renderPlay(state);
-  } else {
-    renderJoinCast(state.users);
-  }
-});
+// ── Buttons ───────────────────────────────────────────────────────────────────
+btnDone.addEventListener('click',()=>socket.emit('advance'));
+btnNext.addEventListener('click',()=>socket.emit('advance'));
+btnBack.addEventListener('click',()=>socket.emit('back'));
+btnRestart.addEventListener('click',()=>{endOverlay.classList.remove('show');if(isAdmin)socket.emit('reset')});
+onlinePill.addEventListener('click',()=>onlineOverlay.classList.add('show'));
+overlayClose.addEventListener('click',()=>onlineOverlay.classList.remove('show'));
+onlineOverlay.addEventListener('click',e=>{if(e.target===onlineOverlay)onlineOverlay.classList.remove('show')});
 
-// ── Join screen ───────────────────────────────────────────────────────────────
+// ── Admin Login (shared logic) ────────────────────────────────────────────────
+function showAdminControls(){
+  // Join screen
+  $('join-admin-toggle').style.display='none';
+  $('join-admin-login-row').classList.remove('show');
+  $('join-admin-controls').style.display='';
+  // Play screen
+  $('play-admin-toggle').style.display='none';
+  $('play-admin-login-row').classList.remove('show');
+  $('play-admin-controls').style.display='';
+  adminBadge.style.display='';
+}
 
-function populateSelect(cast, ci) {
-  cast.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c;
-    opt.textContent = ci[c] ? ci[c].full : c;
-    charSelect.appendChild(opt);
+function doAdminLogin(pwEl,errEl){
+  const pw=pwEl.value.trim();if(!pw)return;
+  socket.emit('admin-login',{password:pw},res=>{
+    if(res.ok){isAdmin=true;showAdminControls();errEl.style.display='none'}
+    else{errEl.style.display='block'}
   });
 }
 
-charSelect.addEventListener('change', () => {
-  const c = charSelect.value;
-  if (c && castInfo[c]) {
-    charDesc.textContent = castInfo[c].desc;
-    joinBtn.disabled = false;
-  } else {
-    charDesc.textContent = '';
-    joinBtn.disabled = true;
-  }
-});
+// Join screen admin
+$('join-admin-toggle').addEventListener('click',()=>{if(!isAdmin){$('join-admin-login-row').classList.toggle('show');$('join-admin-err').style.display='none'}});
+$('btn-join-admin-login').addEventListener('click',()=>doAdminLogin($('join-admin-pw'),$('join-admin-err')));
+$('join-admin-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin($('join-admin-pw'),$('join-admin-err'))});
+$('btn-join-reset').addEventListener('click',()=>{if(isAdmin)socket.emit('reset')});
+$('btn-join-pm').addEventListener('click',openPlayManager);
 
-joinBtn.addEventListener('click', () => {
-  const c = charSelect.value;
-  if (!c) return;
-  myChar = c;
-  myRoleChar.textContent = castInfo[c] ? castInfo[c].full : c;
-  socket.emit('join', { character: c });
-  joinScreen.hidden = true;
-  playScreen.hidden = false;
-  if (curState) renderPlay(curState);
-});
+// Play screen admin
+$('play-admin-toggle').addEventListener('click',()=>{if(!isAdmin){$('play-admin-login-row').classList.toggle('show');$('play-admin-err').style.display='none'}});
+$('btn-play-admin-login').addEventListener('click',()=>doAdminLogin($('play-admin-pw'),$('play-admin-err')));
+$('play-admin-pw').addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin($('play-admin-pw'),$('play-admin-err'))});
+$('btn-play-reset').addEventListener('click',()=>{if(isAdmin)socket.emit('reset')});
+$('btn-play-pm').addEventListener('click',openPlayManager);
 
-function renderJoinCast(users) {
-  if (!users || users.length === 0) {
-    castListEl.innerHTML = '<div style="font-size:0.8em;color:var(--text-dim);padding:4px 0;">No one has joined yet.</div>';
-    return;
-  }
-  const byChar = {};
-  users.forEach(u => {
-    if (!byChar[u.character]) byChar[u.character] = 0;
-    byChar[u.character]++;
+// ══════════════════════════════════════════════════════════════════════════════
+//  PLAY MANAGER
+// ══════════════════════════════════════════════════════════════════════════════
+
+const pmOverlay=$('pm-overlay');
+const pmClose=$('pm-close');
+const pmScriptList=$('pm-script-list');
+
+function openPlayManager(){
+  pmOverlay.classList.add('show');
+  refreshScriptList();
+}
+pmClose.addEventListener('click',()=>pmOverlay.classList.remove('show'));
+pmOverlay.addEventListener('click',e=>{if(e.target===pmOverlay)pmOverlay.classList.remove('show')});
+
+function refreshScriptList(){
+  pmScriptList.innerHTML='<div style="color:var(--text-dim);font-size:.85em;">Loading...</div>';
+  socket.emit('pm:list',{},res=>{
+    if(!res.ok){pmScriptList.innerHTML=`<div class="pm-status err">${esc(res.err)}</div>`;return}
+    renderScriptList(res.scripts);
   });
-  castListEl.innerHTML = Object.entries(byChar).map(([ch, n]) => `
-    <div class="cast-row">
-      <span class="cast-row-char">${esc(castInfo[ch] ? castInfo[ch].full : ch)}</span>
-      <span class="cast-row-player">${n} performer${n > 1 ? 's' : ''}</span>
+}
+
+function renderScriptList(list){
+  if(!list.length){pmScriptList.innerHTML='<div style="color:var(--text-dim);font-size:.85em;">No scripts.</div>';return}
+  pmScriptList.innerHTML=list.map(s=>`
+    <div class="pm-script${s.isActive?' active':''}" data-id="${esc(s.id)}">
+      <div class="pm-script-header">
+        <span class="pm-script-name">${esc(s.name)}</span>
+        ${s.isActive?'<span class="pm-badge pm-badge-active">Active</span>':''}
+        ${s.isDefault?'<span class="pm-badge pm-badge-default">Default</span>':''}
+      </div>
+      <div class="pm-script-meta">${s.beatCount} beats &middot; ${s.castCount} characters</div>
+      <div class="pm-script-actions">
+        ${s.isActive?'':'<button class="pm-btn-sm pm-btn-set" data-action="set" data-id="'+esc(s.id)+'">Set Active</button>'}
+        <button class="pm-btn-sm pm-btn-dl" data-action="export" data-id="${esc(s.id)}">&#8681; Download</button>
+        ${s.isDefault?'':'<button class="pm-btn-sm pm-btn-del" data-action="delete" data-id="'+esc(s.id)+'" data-name="'+esc(s.name)+'">&#128465; Delete</button>'}
+      </div>
     </div>`).join('');
+
+  // Attach listeners
+  pmScriptList.querySelectorAll('[data-action="set"]').forEach(btn=>btn.addEventListener('click',()=>{
+    socket.emit('pm:set-active',{scriptId:btn.dataset.id},res=>{if(res.ok)renderScriptList(res.scripts)});
+  }));
+  pmScriptList.querySelectorAll('[data-action="export"]').forEach(btn=>btn.addEventListener('click',()=>{
+    socket.emit('pm:export',{scriptId:btn.dataset.id},res=>{
+      if(!res.ok) return;
+      const blob=new Blob([res.text],{type:'text/plain'});
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+      a.download=(res.name||'script').replace(/[^a-z0-9]/gi,'_')+'.txt';
+      a.click();URL.revokeObjectURL(a.href);
+    });
+  }));
+  pmScriptList.querySelectorAll('[data-action="delete"]').forEach(btn=>btn.addEventListener('click',()=>{
+    openDeleteConfirm(btn.dataset.id, btn.dataset.name);
+  }));
 }
 
-// ── Play screen ───────────────────────────────────────────────────────────────
-
-function renderPlay(state) {
-  const beat  = state.beat;
-  const pct   = state.total > 1
-    ? Math.round((state.idx / (state.total - 1)) * 100)
-    : 100;
-
-  // Header
-  sceneLabel.textContent  = curScene || 'THE WINDSORS: The Rebrand';
-  beatCounter.textContent = `${state.idx + 1} / ${state.total}`;
-  progressFill.style.width = pct + '%';
-
-  // Script area: history + current
-  const histStart = Math.max(0, state.idx - 4);
-  const histBeats = allBeats.slice(histStart, state.idx);
-
-  scriptScroll.innerHTML = '';
-
-  histBeats.forEach(b => {
-    const div = document.createElement('div');
-    div.className = 'beat history';
-    div.innerHTML = beatHtml(b, false);
-    scriptScroll.appendChild(div);
+// ── AI Generate ──────────────────────────────────────────────────────────────
+const btnGen=$('btn-pm-generate'), genStatus=$('pm-gen-status'), premiseEl=$('pm-premise');
+btnGen.addEventListener('click',()=>{
+  const premise=premiseEl.value.trim();
+  if(!premise){genStatus.className='pm-status err';genStatus.textContent='Enter a premise first.';return}
+  btnGen.disabled=true;
+  genStatus.className='pm-status loading';genStatus.textContent='Generating play with AI... this may take 15-30 seconds.';
+  socket.emit('pm:generate',{premise},res=>{
+    btnGen.disabled=false;
+    if(res.ok){genStatus.className='pm-status ok';genStatus.textContent='Play generated successfully!';premiseEl.value='';renderScriptList(res.scripts)}
+    else{genStatus.className='pm-status err';genStatus.textContent=res.err}
   });
+});
 
-  const curDiv = document.createElement('div');
-  curDiv.className = 'beat current';
-  curDiv.innerHTML = beatHtml(beat, true);
-  scriptScroll.appendChild(curDiv);
+// ── Upload ────────────────────────────────────────────────────────────────────
+const fileInput=$('pm-file'), fileLabel=$('pm-file-label'), btnUpload=$('btn-pm-upload'), uploadStatus=$('pm-upload-status'), uploadName=$('pm-upload-name');
+let uploadedFile=null;
+fileInput.addEventListener('change',()=>{
+  if(fileInput.files.length){uploadedFile=fileInput.files[0];fileLabel.textContent=uploadedFile.name;fileLabel.classList.add('has-file');btnUpload.disabled=false}
+  else{uploadedFile=null;fileLabel.textContent='Choose .txt or .json file';fileLabel.classList.remove('has-file');btnUpload.disabled=true}
+});
+btnUpload.addEventListener('click',()=>{
+  if(!uploadedFile)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const content=reader.result;
+    const format=uploadedFile.name.endsWith('.json')?'json':'txt';
+    const name=uploadName.value.trim()||uploadedFile.name.replace(/\.(txt|json)$/i,'');
+    btnUpload.disabled=true;uploadStatus.className='pm-status loading';uploadStatus.textContent='Parsing and uploading...';
+    socket.emit('pm:upload',{name,content,format},res=>{
+      btnUpload.disabled=false;
+      if(res.ok){uploadStatus.className='pm-status ok';uploadStatus.textContent='Script uploaded!';fileInput.value='';uploadedFile=null;fileLabel.textContent='Choose .txt or .json file';fileLabel.classList.remove('has-file');uploadName.value='';renderScriptList(res.scripts)}
+      else{uploadStatus.className='pm-status err';uploadStatus.textContent=res.err}
+    });
+  };
+  reader.readAsText(uploadedFile);
+});
 
-  // Scroll current into view
-  curDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
-
-  // Action bar
-  renderActionBar(state);
-
-  // Online
-  const count = state.users ? state.users.length : 0;
-  onlinePill.textContent = `${count} online`;
-  renderOverlayCast(state.users);
-
-  // End overlay
-  if (state.ended) {
-    endOverlay.classList.add('show');
-  } else {
-    endOverlay.classList.remove('show');
-  }
+// ── Delete Confirmation ──────────────────────────────────────────────────────
+const delOverlay=$('delete-overlay'), delMsg=$('delete-msg'), btnDelCancel=$('btn-del-cancel'), btnDelConfirm=$('btn-del-confirm');
+let pendingDeleteId=null;
+function openDeleteConfirm(id,name){
+  pendingDeleteId=id;
+  delMsg.innerHTML=`Are you sure you want to delete<br><strong>${esc(name)}</strong>?<br><br>This cannot be undone.`;
+  delOverlay.classList.add('show');
 }
-
-function renderActionBar(state) {
-  const beat = state.beat;
-  const isMyTurn = beat.type === 'dialogue' &&
-    myChar &&
-    (beat.character === myChar || beat.character === 'ALL');
-  const isSfx = beat.type === 'sfx' || beat.type === 'scene' || beat.type === 'section';
-
-  if (isMyTurn) {
-    btnDone.style.display = '';
-    btnNext.style.display = 'none';
-    statusMsg.textContent = `Your line${beat.character === 'ALL' ? ' (everyone speaks)' : ''}! Read it aloud, then press Done.`;
-    statusMsg.className = 'status-msg your-turn';
-  } else if (isSfx) {
-    btnDone.style.display = 'none';
-    btnNext.style.display = '';
-    if (beat.type === 'sfx') {
-      statusMsg.textContent = '🔊 Sound effect — press Next when ready to continue.';
-      statusMsg.className = 'status-msg sfx-turn';
-    } else {
-      statusMsg.textContent = 'Press Next to continue.';
-      statusMsg.className = 'status-msg';
-    }
-  } else {
-    btnDone.style.display = 'none';
-    btnNext.style.display = '';
-    const spk = beat.character;
-    const spkFull = castInfo[spk] ? castInfo[spk].full : spk;
-    statusMsg.textContent = `Waiting for ${spkFull} to finish reading…`;
-    statusMsg.className = 'status-msg';
-  }
-
-  btnBack.disabled = state.idx === 0;
-}
-
-function renderOverlayCast(users) {
-  if (!users || users.length === 0) {
-    overlayCastList.innerHTML = '<div style="color:var(--text-dim);font-size:0.85em;">No one else is connected.</div>';
-    return;
-  }
-  const byChar = {};
-  users.forEach(u => {
-    if (!byChar[u.character]) byChar[u.character] = 0;
-    byChar[u.character]++;
+btnDelCancel.addEventListener('click',()=>{pendingDeleteId=null;delOverlay.classList.remove('show')});
+delOverlay.addEventListener('click',e=>{if(e.target===delOverlay){pendingDeleteId=null;delOverlay.classList.remove('show')}});
+btnDelConfirm.addEventListener('click',()=>{
+  if(!pendingDeleteId)return;
+  socket.emit('pm:delete',{scriptId:pendingDeleteId},res=>{
+    pendingDeleteId=null;delOverlay.classList.remove('show');
+    if(res.ok)renderScriptList(res.scripts);
   });
-  overlayCastList.innerHTML = Object.entries(byChar).map(([ch, n]) => `
-    <div class="cast-row">
-      <span class="cast-row-char">${esc(castInfo[ch] ? castInfo[ch].full : ch)}</span>
-      <span class="cast-row-player">${n} performer${n > 1 ? 's' : ''}</span>
-    </div>`).join('');
-}
-
-// ── Button events ─────────────────────────────────────────────────────────────
-
-btnDone.addEventListener('click', () => socket.emit('advance'));
-btnNext.addEventListener('click', () => socket.emit('advance'));
-btnBack.addEventListener('click', () => socket.emit('back'));
-btnRestart.addEventListener('click', () => {
-  endOverlay.classList.remove('show');
-  if (isAdmin) socket.emit('reset');
-});
-
-// ── Admin ─────────────────────────────────────────────────────────────────────
-const adminToggle   = document.getElementById('admin-toggle');
-const adminLoginRow = document.getElementById('admin-login-row');
-const adminPw       = document.getElementById('admin-pw');
-const btnAdminLogin = document.getElementById('btn-admin-login');
-const adminErr      = document.getElementById('admin-err');
-const adminBadge    = document.getElementById('admin-badge');
-const btnReset      = document.getElementById('btn-reset');
-
-adminToggle.addEventListener('click', () => {
-  if (isAdmin) return;
-  adminLoginRow.classList.toggle('show');
-  adminErr.style.display = 'none';
-});
-
-btnAdminLogin.addEventListener('click', doAdminLogin);
-adminPw.addEventListener('keydown', e => { if (e.key === 'Enter') doAdminLogin(); });
-
-function doAdminLogin() {
-  const pw = adminPw.value.trim();
-  if (!pw) return;
-  socket.emit('admin-login', { password: pw }, (res) => {
-    if (res.ok) {
-      isAdmin = true;
-      adminLoginRow.classList.remove('show');
-      adminToggle.style.display = 'none';
-      adminBadge.style.display = '';
-      btnReset.style.display = '';
-      adminErr.style.display = 'none';
-    } else {
-      adminErr.style.display = 'block';
-    }
-  });
-}
-
-btnReset.addEventListener('click', () => {
-  if (isAdmin) socket.emit('reset');
-});
-
-// ── Join-screen admin ─────────────────────────────────────────────────────────
-const joinAdminToggle   = document.getElementById('join-admin-toggle');
-const joinAdminLoginRow = document.getElementById('join-admin-login-row');
-const joinAdminPw       = document.getElementById('join-admin-pw');
-const btnJoinAdminLogin = document.getElementById('btn-join-admin-login');
-const joinAdminErr      = document.getElementById('join-admin-err');
-const joinAdminBadge    = document.getElementById('join-admin-badge');
-const btnJoinReset      = document.getElementById('btn-join-reset');
-
-joinAdminToggle.addEventListener('click', () => {
-  if (isAdmin) return;
-  joinAdminLoginRow.classList.toggle('show');
-  joinAdminErr.style.display = 'none';
-});
-
-btnJoinAdminLogin.addEventListener('click', doJoinAdminLogin);
-joinAdminPw.addEventListener('keydown', e => { if (e.key === 'Enter') doJoinAdminLogin(); });
-
-function doJoinAdminLogin() {
-  const pw = joinAdminPw.value.trim();
-  if (!pw) return;
-  socket.emit('admin-login', { password: pw }, (res) => {
-    if (res.ok) {
-      isAdmin = true;
-      joinAdminLoginRow.classList.remove('show');
-      joinAdminToggle.style.display = 'none';
-      joinAdminBadge.style.display = '';
-      btnJoinReset.style.display = '';
-      joinAdminErr.style.display = 'none';
-      // Also unlock play-screen admin if they join later
-      adminToggle.style.display = 'none';
-      adminBadge.style.display = '';
-      btnReset.style.display = '';
-    } else {
-      joinAdminErr.style.display = 'block';
-    }
-  });
-}
-
-btnJoinReset.addEventListener('click', () => {
-  if (isAdmin) socket.emit('reset');
-});
-
-onlinePill.addEventListener('click', () => onlineOverlay.classList.add('show'));
-overlayClose.addEventListener('click', () => onlineOverlay.classList.remove('show'));
-onlineOverlay.addEventListener('click', e => {
-  if (e.target === onlineOverlay) onlineOverlay.classList.remove('show');
 });
 </script>
 </body>
