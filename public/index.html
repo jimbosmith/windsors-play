@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>The Windsors: The Rebrand</title>
+  <style>
+    :root {
+      --bg:           #0d1117;
+      --card:         #161b22;
+      --border:       #30363d;
+      --text:         #e6edf3;
+      --text-dim:     #7d8590;
+      --gold:         #d4a017;
+      --gold-dim:     #7a5c0b;
+      --sfx-bg:       #1f1200;
+      --sfx-border:   #5a3500;
+      --sfx-text:     #f0950a;
+      --scene-bg:     #0d0d1f;
+      --scene-border: #3d2080;
+      --scene-text:   #a78bfa;
+      --section-bg:   #0f1a0f;
+      --section-border:#265226;
+      --section-text: #6bcf7f;
+      --my-line-bg:   #0a1f12;
+      --my-line-border:#1a6b3a;
+      --btn-done-bg:  #14532d;
+      --btn-done-border:#166534;
+      --btn-done-text:#86efac;
+      --btn-next-bg:  #1c2333;
+      --btn-next-border:#30363d;
+      --btn-next-text:#8b949e;
+      --btn-back-bg:  transparent;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Georgia, 'Times New Roman', serif;
+      -webkit-text-size-adjust: 100%;
+      overflow: hidden;
+    }
+
+    #app {
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen { display: flex; flex-direction: column; height: 100%; }
+    .screen[hidden] { display: none !important; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ═══════════════════════════════════════════════
+       JOIN SCREEN
+    ═══════════════════════════════════════════════ */
+
+    #join-screen {
+      overflow-y: auto;
+      padding: 20px 16px 32px;
+      gap: 16px;
+    }
+
+    .banner {
+      text-align: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 4px;
+    }
+    .banner-crown { font-size: 2.2em; line-height: 1; margin-bottom: 6px; }
+    .banner-title {
+      font-size: 1.35em;
+      color: var(--gold);
+      font-weight: bold;
+      letter-spacing: 0.06em;
+    }
+    .banner-subtitle {
+      font-size: 0.8em;
+      color: var(--text-dim);
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 16px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 0.7em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+    }
+
+    select {
+      width: 100%;
+      padding: 11px 12px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1em;
+      font-family: Georgia, serif;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      outline: none;
+    }
+    select:focus { border-color: var(--gold-dim); }
+
+    .char-desc {
+      margin-top: 8px;
+      min-height: 2em;
+      font-size: 0.78em;
+      color: var(--text-dim);
+      font-style: italic;
+      line-height: 1.4;
+    }
+
+    .btn-join {
+      width: 100%;
+      margin-top: 14px;
+      padding: 15px;
+      background: #21104a;
+      color: #d8b4fe;
+      border: 1px solid #6d28d9;
+      border-radius: 10px;
+      font-size: 1.05em;
+      font-family: Georgia, serif;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.15s;
+    }
+    .btn-join:active { background: #2e1470; }
+
+    .cast-list { display: flex; flex-direction: column; gap: 2px; }
+    .cast-row {
+      display: flex;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+    }
+    .cast-row:last-child { border-bottom: none; }
+    .cast-row-char {
+      font-size: 0.82em;
+      font-weight: bold;
+      color: var(--gold);
+      min-width: 90px;
+    }
+    .cast-row-player {
+      font-size: 0.78em;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+    .cast-row-empty {
+      font-size: 0.78em;
+      color: #3d3d50;
+      font-style: italic;
+    }
+
+    /* ═══════════════════════════════════════════════
+       PLAY SCREEN
+    ═══════════════════════════════════════════════ */
+
+    #play-screen { overflow: hidden; }
+
+    /* Header */
+    .play-header {
+      flex-shrink: 0;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 14px 6px;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    .scene-label {
+      font-size: 0.7em;
+      color: var(--scene-text);
+      letter-spacing: 0.08em;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-right: 8px;
+    }
+    .beat-counter {
+      font-size: 0.68em;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    .progress-bar {
+      height: 2px;
+      background: var(--border);
+      border-radius: 2px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    /* Script scroll area */
+    .script-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px 8px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Beat cards ── */
+    .beat { margin-bottom: 10px; border-radius: 10px; overflow: hidden; }
+    .beat.history { opacity: 0.28; }
+    .beat.current { opacity: 1; }
+
+    /* SFX */
+    .sfx-box {
+      background: var(--sfx-bg);
+      border: 1px solid var(--sfx-border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .sfx-icon { font-size: 1.1em; flex-shrink: 0; margin-top: 1px; }
+    .sfx-label {
+      display: block;
+      font-size: 0.65em;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--sfx-text);
+      opacity: 0.65;
+      margin-bottom: 3px;
+    }
+    .sfx-text {
+      color: var(--sfx-text);
+      font-style: italic;
+      font-size: 0.9em;
+      line-height: 1.45;
+    }
+
+    /* Scene header */
+    .scene-box {
+      background: var(--scene-bg);
+      border: 1px solid var(--scene-border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      text-align: center;
+    }
+    .scene-box-text {
+      color: var(--scene-text);
+      font-size: 0.82em;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Section (Part One: ...) */
+    .section-box {
+      background: var(--section-bg);
+      border: 1px solid var(--section-border);
+      border-radius: 10px;
+      padding: 10px 16px;
+      text-align: center;
+    }
+    .section-box-text {
+      color: var(--section-text);
+      font-size: 0.82em;
+      letter-spacing: 0.06em;
+    }
+
+    /* Dialogue */
+    .dialogue-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 15px;
+    }
+    .dialogue-box.my-line {
+      background: var(--my-line-bg);
+      border-color: var(--my-line-border);
+    }
+    .char-name {
+      font-size: 0.72em;
+      font-weight: bold;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 7px;
+    }
+    .dialogue-text {
+      font-size: 1.05em;
+      line-height: 1.55;
+    }
+    .stage-dir {
+      color: var(--text-dim);
+      font-style: italic;
+      font-size: 0.9em;
+    }
+
+    /* ── Action bar ── */
+    .action-bar {
+      flex-shrink: 0;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      padding: 10px 14px 12px;
+    }
+
+    .status-msg {
+      text-align: center;
+      font-size: 0.8em;
+      color: var(--text-dim);
+      font-style: italic;
+      margin-bottom: 9px;
+      line-height: 1.3;
+    }
+    .status-msg.your-turn {
+      color: #4ade80;
+      font-style: normal;
+      font-weight: bold;
+      font-size: 0.88em;
+    }
+    .status-msg.sfx-turn {
+      color: var(--sfx-text);
+      font-style: normal;
+    }
+
+    .btn-row { display: flex; gap: 8px; margin-bottom: 8px; }
+
+    .btn-done {
+      flex: 1;
+      padding: 15px 10px;
+      background: var(--btn-done-bg);
+      color: var(--btn-done-text);
+      border: 1px solid var(--btn-done-border);
+      border-radius: 10px;
+      font-size: 1em;
+      font-family: Georgia, serif;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.15s;
+    }
+    .btn-done:active { background: #166534; }
+
+    .btn-next {
+      flex: 1;
+      padding: 15px 10px;
+      background: var(--btn-next-bg);
+      color: var(--btn-next-text);
+      border: 1px solid var(--btn-next-border);
+      border-radius: 10px;
+      font-size: 1em;
+      font-family: Georgia, serif;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-next:active { background: #252d3e; }
+
+    .btn-back {
+      padding: 12px 16px;
+      background: var(--btn-back-bg);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.85em;
+      font-family: Georgia, serif;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-back:active { background: var(--card); }
+
+    /* Footer bar */
+    .footer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 6px;
+      border-top: 1px solid var(--border);
+      margin-top: 2px;
+    }
+    .my-role {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .my-role-label {
+      font-size: 0.65em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .my-role-char {
+      font-size: 0.82em;
+      color: var(--gold);
+      font-weight: bold;
+    }
+    .online-pill {
+      font-size: 0.65em;
+      color: var(--text-dim);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 8px;
+      cursor: pointer;
+    }
+
+    /* ── Online overlay ── */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 50;
+      padding: 0 0 0 0;
+    }
+    .overlay.show { display: flex; }
+    .overlay-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px 16px 0 0;
+      padding: 20px 20px 32px;
+      width: 100%;
+      max-height: 75vh;
+      overflow-y: auto;
+    }
+    .overlay-title {
+      font-size: 0.72em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .overlay-close { cursor: pointer; font-size: 1.2em; color: var(--text-dim); }
+
+    /* ── End screen ── */
+    #end-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 24px;
+    }
+    #end-overlay.show { display: flex; }
+    .end-card {
+      background: var(--card);
+      border: 1px solid var(--gold-dim);
+      border-radius: 16px;
+      padding: 32px 24px;
+      text-align: center;
+      max-width: 320px;
+      width: 100%;
+    }
+    .end-crown { font-size: 3em; margin-bottom: 12px; }
+    .end-title { color: var(--gold); font-size: 1.3em; margin-bottom: 8px; }
+    .end-sub { color: var(--text-dim); font-size: 0.85em; line-height: 1.5; }
+    .btn-restart {
+      margin-top: 20px;
+      padding: 12px 24px;
+      background: #21104a;
+      color: #d8b4fe;
+      border: 1px solid #6d28d9;
+      border-radius: 10px;
+      font-size: 0.95em;
+      font-family: Georgia, serif;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══════════════════════════════════════════
+       JOIN SCREEN
+  ═══════════════════════════════════════════ -->
+  <div id="join-screen" class="screen">
+    <div class="banner">
+      <div class="banner-crown">♛</div>
+      <div class="banner-title">THE WINDSORS</div>
+      <div class="banner-subtitle">"The Rebrand" — A Pastiche Radio Play in One Act</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Choose your character</div>
+      <select id="char-select">
+        <option value="">— Select a character —</option>
+      </select>
+      <div id="char-desc" class="char-desc"></div>
+      <button class="btn-join" id="join-btn" disabled>Join the Cast</button>
+    </div>
+
+    <div class="card" id="cast-card">
+      <div class="card-title">Cast online</div>
+      <div class="cast-list" id="cast-list">
+        <div class="cast-row-empty" style="font-size:0.8em; color:var(--text-dim);">No one has joined yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       PLAY SCREEN
+  ═══════════════════════════════════════════ -->
+  <div id="play-screen" class="screen" hidden>
+    <div class="play-header">
+      <div class="header-top">
+        <div class="scene-label" id="scene-label">—</div>
+        <div class="beat-counter" id="beat-counter">—</div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="script-scroll" id="script-scroll"></div>
+
+    <div class="action-bar">
+      <div class="status-msg" id="status-msg"></div>
+      <div class="btn-row">
+        <button class="btn-done" id="btn-done" style="display:none">✓ Done Reading</button>
+        <button class="btn-next" id="btn-next">Next ▶</button>
+        <button class="btn-back" id="btn-back">◀</button>
+      </div>
+      <div class="footer-bar">
+        <div class="my-role">
+          <span class="my-role-label">Playing:</span>
+          <span class="my-role-char" id="my-role-char">—</span>
+        </div>
+        <div class="online-pill" id="online-pill">0 online</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Online users overlay -->
+<div class="overlay" id="online-overlay">
+  <div class="overlay-card">
+    <div class="overlay-title">
+      <span>Performers Online</span>
+      <span class="overlay-close" id="overlay-close">✕</span>
+    </div>
+    <div class="cast-list" id="overlay-cast-list"></div>
+  </div>
+</div>
+
+<!-- End of play overlay -->
+<div id="end-overlay">
+  <div class="end-card">
+    <div class="end-crown">♛</div>
+    <div class="end-title">End of Play</div>
+    <div class="end-sub">
+      "Long may it stagger."<br><br>
+      Thank you, Your Majesty.<br>God save the basil.
+    </div>
+    <button class="btn-restart" id="btn-restart">↺ Start Again</button>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+'use strict';
+
+const socket = io();
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let allBeats   = [];
+let castInfo   = {};
+let myChar     = null;
+let curState   = null;
+let curScene   = '';
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const joinScreen   = document.getElementById('join-screen');
+const playScreen   = document.getElementById('play-screen');
+const charSelect   = document.getElementById('char-select');
+const charDesc     = document.getElementById('char-desc');
+const joinBtn      = document.getElementById('join-btn');
+const castListEl   = document.getElementById('cast-list');
+const sceneLabel   = document.getElementById('scene-label');
+const beatCounter  = document.getElementById('beat-counter');
+const progressFill = document.getElementById('progress-fill');
+const scriptScroll = document.getElementById('script-scroll');
+const statusMsg    = document.getElementById('status-msg');
+const btnDone      = document.getElementById('btn-done');
+const btnNext      = document.getElementById('btn-next');
+const btnBack      = document.getElementById('btn-back');
+const myRoleChar   = document.getElementById('my-role-char');
+const onlinePill   = document.getElementById('online-pill');
+const onlineOverlay= document.getElementById('online-overlay');
+const overlayClose = document.getElementById('overlay-close');
+const overlayCastList = document.getElementById('overlay-cast-list');
+const endOverlay   = document.getElementById('end-overlay');
+const btnRestart   = document.getElementById('btn-restart');
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function fmtDialogue(text) {
+  let t = esc(text);
+  t = t.replace(/(\([^)]+\))/g, '<em class="stage-dir">$1</em>');
+  t = t.replace(/\n/g, '<br>');
+  return t;
+}
+
+function beatHtml(beat, isCurrent) {
+  if (beat.type === 'sfx') {
+    return `<div class="sfx-box">
+      <div class="sfx-icon">🔊</div>
+      <div>
+        <span class="sfx-label">Sound Effect</span>
+        <span class="sfx-text">${esc(beat.text)}</span>
+      </div>
+    </div>`;
+  }
+  if (beat.type === 'scene') {
+    return `<div class="scene-box"><span class="scene-box-text">${esc(beat.text)}</span></div>`;
+  }
+  if (beat.type === 'section') {
+    return `<div class="section-box"><span class="section-box-text">${esc(beat.text)}</span></div>`;
+  }
+  if (beat.type === 'dialogue') {
+    const mine = myChar && (beat.character === myChar || beat.character === 'ALL');
+    return `<div class="dialogue-box${isCurrent && mine ? ' my-line' : ''}">
+      <div class="char-name">${esc(beat.character)}</div>
+      <div class="dialogue-text">${fmtDialogue(beat.text)}</div>
+    </div>`;
+  }
+  return '';
+}
+
+// ── Socket events ─────────────────────────────────────────────────────────────
+
+socket.on('init', ({ beats, castInfo: ci, cast }) => {
+  allBeats  = beats;
+  castInfo  = ci;
+  populateSelect(cast, ci);
+});
+
+socket.on('state', state => {
+  curState = state;
+
+  // Update current scene label (scan back from current index)
+  for (let i = state.idx; i >= 0; i--) {
+    if (allBeats[i] && allBeats[i].type === 'scene') {
+      curScene = allBeats[i].text;
+      break;
+    }
+  }
+
+  if (myChar !== null) {
+    renderPlay(state);
+  } else {
+    renderJoinCast(state.users);
+  }
+});
+
+// ── Join screen ───────────────────────────────────────────────────────────────
+
+function populateSelect(cast, ci) {
+  cast.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = ci[c] ? ci[c].full : c;
+    charSelect.appendChild(opt);
+  });
+}
+
+charSelect.addEventListener('change', () => {
+  const c = charSelect.value;
+  if (c && castInfo[c]) {
+    charDesc.textContent = castInfo[c].desc;
+    joinBtn.disabled = false;
+  } else {
+    charDesc.textContent = '';
+    joinBtn.disabled = true;
+  }
+});
+
+joinBtn.addEventListener('click', () => {
+  const c = charSelect.value;
+  if (!c) return;
+  myChar = c;
+  myRoleChar.textContent = castInfo[c] ? castInfo[c].full : c;
+  socket.emit('join', { character: c });
+  joinScreen.hidden = true;
+  playScreen.hidden = false;
+  if (curState) renderPlay(curState);
+});
+
+function renderJoinCast(users) {
+  if (!users || users.length === 0) {
+    castListEl.innerHTML = '<div style="font-size:0.8em;color:var(--text-dim);padding:4px 0;">No one has joined yet.</div>';
+    return;
+  }
+  const byChar = {};
+  users.forEach(u => {
+    if (!byChar[u.character]) byChar[u.character] = 0;
+    byChar[u.character]++;
+  });
+  castListEl.innerHTML = Object.entries(byChar).map(([ch, n]) => `
+    <div class="cast-row">
+      <span class="cast-row-char">${esc(castInfo[ch] ? castInfo[ch].full : ch)}</span>
+      <span class="cast-row-player">${n} performer${n > 1 ? 's' : ''}</span>
+    </div>`).join('');
+}
+
+// ── Play screen ───────────────────────────────────────────────────────────────
+
+function renderPlay(state) {
+  const beat  = state.beat;
+  const pct   = state.total > 1
+    ? Math.round((state.idx / (state.total - 1)) * 100)
+    : 100;
+
+  // Header
+  sceneLabel.textContent  = curScene || 'THE WINDSORS: The Rebrand';
+  beatCounter.textContent = `${state.idx + 1} / ${state.total}`;
+  progressFill.style.width = pct + '%';
+
+  // Script area: history + current
+  const histStart = Math.max(0, state.idx - 4);
+  const histBeats = allBeats.slice(histStart, state.idx);
+
+  scriptScroll.innerHTML = '';
+
+  histBeats.forEach(b => {
+    const div = document.createElement('div');
+    div.className = 'beat history';
+    div.innerHTML = beatHtml(b, false);
+    scriptScroll.appendChild(div);
+  });
+
+  const curDiv = document.createElement('div');
+  curDiv.className = 'beat current';
+  curDiv.innerHTML = beatHtml(beat, true);
+  scriptScroll.appendChild(curDiv);
+
+  // Scroll current into view
+  curDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+  // Action bar
+  renderActionBar(state);
+
+  // Online
+  const count = state.users ? state.users.length : 0;
+  onlinePill.textContent = `${count} online`;
+  renderOverlayCast(state.users);
+
+  // End overlay
+  if (state.ended) {
+    endOverlay.classList.add('show');
+  } else {
+    endOverlay.classList.remove('show');
+  }
+}
+
+function renderActionBar(state) {
+  const beat = state.beat;
+  const isMyTurn = beat.type === 'dialogue' &&
+    myChar &&
+    (beat.character === myChar || beat.character === 'ALL');
+  const isSfx = beat.type === 'sfx' || beat.type === 'scene' || beat.type === 'section';
+
+  if (isMyTurn) {
+    btnDone.style.display = '';
+    btnNext.style.display = 'none';
+    statusMsg.textContent = `Your line${beat.character === 'ALL' ? ' (everyone speaks)' : ''}! Read it aloud, then press Done.`;
+    statusMsg.className = 'status-msg your-turn';
+  } else if (isSfx) {
+    btnDone.style.display = 'none';
+    btnNext.style.display = '';
+    if (beat.type === 'sfx') {
+      statusMsg.textContent = '🔊 Sound effect — press Next when ready to continue.';
+      statusMsg.className = 'status-msg sfx-turn';
+    } else {
+      statusMsg.textContent = 'Press Next to continue.';
+      statusMsg.className = 'status-msg';
+    }
+  } else {
+    btnDone.style.display = 'none';
+    btnNext.style.display = '';
+    const spk = beat.character;
+    const spkFull = castInfo[spk] ? castInfo[spk].full : spk;
+    statusMsg.textContent = `Waiting for ${spkFull} to finish reading…`;
+    statusMsg.className = 'status-msg';
+  }
+
+  btnBack.disabled = state.idx === 0;
+}
+
+function renderOverlayCast(users) {
+  if (!users || users.length === 0) {
+    overlayCastList.innerHTML = '<div style="color:var(--text-dim);font-size:0.85em;">No one else is connected.</div>';
+    return;
+  }
+  const byChar = {};
+  users.forEach(u => {
+    if (!byChar[u.character]) byChar[u.character] = 0;
+    byChar[u.character]++;
+  });
+  overlayCastList.innerHTML = Object.entries(byChar).map(([ch, n]) => `
+    <div class="cast-row">
+      <span class="cast-row-char">${esc(castInfo[ch] ? castInfo[ch].full : ch)}</span>
+      <span class="cast-row-player">${n} performer${n > 1 ? 's' : ''}</span>
+    </div>`).join('');
+}
+
+// ── Button events ─────────────────────────────────────────────────────────────
+
+btnDone.addEventListener('click', () => socket.emit('advance'));
+btnNext.addEventListener('click', () => socket.emit('advance'));
+btnBack.addEventListener('click', () => socket.emit('back'));
+btnRestart.addEventListener('click', () => {
+  endOverlay.classList.remove('show');
+  socket.emit('reset');
+});
+
+onlinePill.addEventListener('click', () => onlineOverlay.classList.add('show'));
+overlayClose.addEventListener('click', () => onlineOverlay.classList.remove('show'));
+onlineOverlay.addEventListener('click', e => {
+  if (e.target === onlineOverlay) onlineOverlay.classList.remove('show');
+});
+</script>
+</body>
+</html>

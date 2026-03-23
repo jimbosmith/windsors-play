@@ -1,0 +1,13 @@
+{
+  "name": "the-windsors-play",
+  "version": "1.0.0",
+  "description": "Interactive radio play script app — The Windsors: The Rebrand",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  }
+}
