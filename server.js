@@ -13,9 +13,10 @@ app.use(express.static('public'));
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'jim2759';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL   = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const ADMIN_PASSWORD   = process.env.ADMIN_PASSWORD || 'jim2759';
+const GEMINI_API_KEY   = process.env.GEMINI_API_KEY || '';
+const GEMINI_MODEL     = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 
 // ── Default Cast ──────────────────────────────────────────────────────────────
 
@@ -533,6 +534,48 @@ Requirements:
   return text;
 }
 
+// ── Claude AI ─────────────────────────────────────────────────────────────────
+
+const PLAY_PROMPT = `Write a satirical comedy radio play based on this premise: "PREMISE_HERE"
+
+Format rules (follow EXACTLY):
+- Scene headers: SCENE ONE — DESCRIPTION (use SCENE TWO, THREE, etc.)
+- Sound effects: SFX: description of sound
+- Character dialogue: CHARACTER_NAME: their dialogue text
+- Stage directions within dialogue in parentheses: (whispering)
+- Character names in ALL CAPS for dialogue lines
+
+Requirements:
+- 5-10 minutes when read aloud (at least 80 lines of dialogue)
+- 3-8 distinct characters with memorable personalities
+- At least 3 scenes
+- Include sound effects between scenes and during action
+- Sharp, witty, satirical humor throughout
+- Start DIRECTLY with SCENE ONE. No title, no cast list, no preamble.`;
+
+async function generateWithClaude(premise) {
+  if (!ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured. Set it in Railway environment variables.');
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 8192,
+      messages: [{ role: 'user', content: PLAY_PROMPT.replace('PREMISE_HERE', premise) }],
+    }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  const text = data.content?.[0]?.text;
+  if (!text) throw new Error('No content generated');
+  return text;
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 
 const state = {
@@ -573,7 +616,7 @@ io.on('connection', socket => {
   const s = getActive();
   const castWithAll = [...s.cast];
   if (!castWithAll.includes('ALL')) castWithAll.push('ALL');
-  socket.emit('init', { beats: s.beats, castInfo: s.castInfo, cast: castWithAll });
+  socket.emit('init', { beats: s.beats, castInfo: s.castInfo, cast: castWithAll, name: s.name });
   socket.emit('state', payload());
 
   socket.on('join', ({ character }) => {
@@ -655,11 +698,13 @@ io.on('connection', socket => {
     }
   });
 
-  socket.on('pm:generate', async ({ premise }, cb) => {
+  socket.on('pm:generate', async ({ premise, aiModel }, cb) => {
     if (!socket.isAdmin) return cb({ ok:false, err:'Not admin' });
     if (!premise?.trim()) return cb({ ok:false, err:'Please enter a premise' });
     try {
-      const raw = await generateWithGemini(premise.trim());
+      const raw = aiModel === 'claude'
+        ? await generateWithClaude(premise.trim())
+        : await generateWithGemini(premise.trim());
       const beats = parseStandardFormat(raw);
       if (!beats.length) return cb({ ok:false, err:'AI generated content but it could not be parsed into a script' });
       const id = 'script_'+(nextScriptId++);

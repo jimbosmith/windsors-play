@@ -100,6 +100,7 @@
     .btn-reset:active{background:#5a2020}
     .btn-pm-open{width:100%;margin-top:8px;padding:12px;background:#1a1a3b;color:#a5b4fc;border:1px solid #312e81;border-radius:10px;font-size:.9em;font-family:Georgia,serif;cursor:pointer}
     .btn-pm-open:active{background:#2a2a5b}
+    .version-tag{font-size:.55em;color:var(--border);text-align:center;padding:6px 0;letter-spacing:.06em}
 
     /* ── Overlays ── */
     .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);align-items:flex-end;justify-content:center;z-index:50}
@@ -176,8 +177,8 @@
   <div id="join-screen" class="screen">
     <div class="banner">
       <div class="banner-crown">&#9819;</div>
-      <div class="banner-title">THE WINDSORS</div>
-      <div class="banner-subtitle">"The Rebrand" &mdash; A Pastiche Radio Play in One Act</div>
+      <div class="banner-title" id="banner-title">THE WINDSORS</div>
+      <div class="banner-subtitle" id="banner-subtitle">"The Rebrand" &mdash; A Pastiche Radio Play in One Act</div>
     </div>
 
     <div class="card">
@@ -206,6 +207,7 @@
         <button class="btn-pm-open" id="btn-join-pm">&#9835; Play Manager</button>
       </div>
     </div>
+    <div class="version-tag">v1.2.0</div>
   </div>
 
   <!-- ══════ PLAY SCREEN ══════ -->
@@ -279,7 +281,11 @@
     <div class="pm-section">
       <div class="pm-section-title">AI Generate Play</div>
       <textarea id="pm-premise" class="pm-textarea" placeholder="Enter a comedic premise, e.g. 'A group of penguins trying to rob a bank'"></textarea>
-      <div class="pm-btn-row">
+      <div class="pm-btn-row" style="align-items:center">
+        <select id="pm-ai-model" style="padding:9px 10px;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;font-family:Georgia,serif;font-size:.85em;outline:none;min-width:120px">
+          <option value="gemini">Gemini</option>
+          <option value="claude">Claude</option>
+        </select>
         <button class="btn-pm btn-pm-primary" id="btn-pm-generate">Generate Play</button>
       </div>
       <div class="pm-status" id="pm-gen-status"></div>
@@ -352,7 +358,7 @@ function beatHtml(b,cur){
 }
 
 // ── Socket ────────────────────────────────────────────────────────────────────
-socket.on('init',({beats,castInfo:ci,cast})=>{allBeats=beats;castInfo=ci;populateSelect(cast,ci)});
+socket.on('init',({beats,castInfo:ci,cast,name})=>{allBeats=beats;castInfo=ci;populateSelect(cast,ci);updateTitle(name)});
 socket.on('state',state=>{
   curState=state;
   for(let i=state.idx;i>=0;i--){if(allBeats[i]&&allBeats[i].type==='scene'){curScene=allBeats[i].text;break}}
@@ -362,7 +368,22 @@ socket.on('script-changed',({beats,castInfo:ci,cast,name})=>{
   allBeats=beats; castInfo=ci;
   populateSelect(cast,ci);
   curScene='';
+  updateTitle(name);
 });
+
+function updateTitle(name){
+  const t=$('banner-title'), s=$('banner-subtitle');
+  if(!name) return;
+  // Extract a short title and subtitle from the name
+  if(name==='The Windsors: The Rebrand'){
+    t.textContent='THE WINDSORS';
+    s.innerHTML='"The Rebrand" &mdash; A Pastiche Radio Play in One Act';
+  } else {
+    t.textContent=name.toUpperCase();
+    s.innerHTML='A Radio Play';
+  }
+  document.title=name;
+}
 
 // ── Join ──────────────────────────────────────────────────────────────────────
 function populateSelect(cast,ci){
@@ -520,7 +541,8 @@ btnGen.addEventListener('click',()=>{
   if(!premise){genStatus.className='pm-status err';genStatus.textContent='Enter a premise first.';return}
   btnGen.disabled=true;
   genStatus.className='pm-status loading';genStatus.textContent='Generating play with AI... this may take 15-30 seconds.';
-  socket.emit('pm:generate',{premise},res=>{
+  const aiModel=$('pm-ai-model').value;
+  socket.emit('pm:generate',{premise,aiModel},res=>{
     btnGen.disabled=false;
     if(res.ok){genStatus.className='pm-status ok';genStatus.textContent='Play generated successfully!';premiseEl.value='';renderScriptList(res.scripts)}
     else{genStatus.className='pm-status err';genStatus.textContent=res.err}
