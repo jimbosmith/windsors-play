@@ -394,11 +394,15 @@ function parseScript(raw) {
 const BEATS = parseScript(SCRIPT_RAW);
 console.log(`Script parsed: ${BEATS.length} beats`);
 
+// ── Admin ─────────────────────────────────────────────────────────────────────
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'jim2759';
+
 // ── State ─────────────────────────────────────────────────────────────────────
 
 const state = {
   idx:   0,
-  users: {},   // socketId -> { id, character }
+  users: {},   // socketId -> { id, character, admin }
 };
 
 function payload() {
@@ -418,8 +422,18 @@ io.on('connection', socket => {
   socket.emit('state', payload());
 
   socket.on('join', ({ character }) => {
-    state.users[socket.id] = { id: socket.id, character };
+    state.users[socket.id] = { id: socket.id, character, admin: false };
     io.emit('state', payload());
+  });
+
+  socket.on('admin-login', ({ password }, cb) => {
+    if (password === ADMIN_PASSWORD) {
+      if (state.users[socket.id]) state.users[socket.id].admin = true;
+      cb({ ok: true });
+      io.emit('state', payload());
+    } else {
+      cb({ ok: false });
+    }
   });
 
   socket.on('advance', () => {
@@ -437,8 +451,11 @@ io.on('connection', socket => {
   });
 
   socket.on('reset', () => {
-    state.idx = 0;
-    io.emit('state', payload());
+    const user = state.users[socket.id];
+    if (user && user.admin) {
+      state.idx = 0;
+      io.emit('state', payload());
+    }
   });
 
   socket.on('disconnect', () => {

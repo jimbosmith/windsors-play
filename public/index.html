@@ -491,6 +491,78 @@
       font-family: Georgia, serif;
       cursor: pointer;
     }
+
+    /* ── Admin ── */
+    .admin-section {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .admin-toggle {
+      font-size: 0.7em;
+      color: var(--text-dim);
+      cursor: pointer;
+      text-align: center;
+      padding: 4px;
+    }
+    .admin-login-row {
+      display: none;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .admin-login-row.show { display: flex; }
+    .admin-input {
+      flex: 1;
+      padding: 8px 10px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85em;
+      font-family: Georgia, serif;
+      outline: none;
+    }
+    .admin-input:focus { border-color: var(--gold-dim); }
+    .btn-admin-login {
+      padding: 8px 14px;
+      background: #3b1a1a;
+      color: #fca5a5;
+      border: 1px solid #7f1d1d;
+      border-radius: 8px;
+      font-size: 0.8em;
+      font-family: Georgia, serif;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .admin-err {
+      font-size: 0.72em;
+      color: #ef4444;
+      margin-top: 4px;
+      display: none;
+    }
+    .admin-badge {
+      font-size: 0.6em;
+      color: #fca5a5;
+      background: #3b1a1a;
+      border: 1px solid #7f1d1d;
+      border-radius: 10px;
+      padding: 2px 7px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .btn-reset {
+      width: 100%;
+      margin-top: 8px;
+      padding: 12px;
+      background: #3b1a1a;
+      color: #fca5a5;
+      border: 1px solid #7f1d1d;
+      border-radius: 10px;
+      font-size: 0.9em;
+      font-family: Georgia, serif;
+      cursor: pointer;
+    }
+    .btn-reset:active { background: #5a2020; }
   </style>
 </head>
 <body>
@@ -550,8 +622,20 @@
         <div class="my-role">
           <span class="my-role-label">Playing:</span>
           <span class="my-role-char" id="my-role-char">—</span>
+          <span class="admin-badge" id="admin-badge" style="display:none">ADMIN</span>
         </div>
         <div class="online-pill" id="online-pill">0 online</div>
+      </div>
+
+      <!-- Admin controls -->
+      <div class="admin-section" id="admin-section">
+        <div class="admin-toggle" id="admin-toggle">Admin</div>
+        <div class="admin-login-row" id="admin-login-row">
+          <input type="password" class="admin-input" id="admin-pw" placeholder="Admin password">
+          <button class="btn-admin-login" id="btn-admin-login">Unlock</button>
+        </div>
+        <div class="admin-err" id="admin-err">Wrong password</div>
+        <button class="btn-reset" id="btn-reset" style="display:none">↺ Reset to Start</button>
       </div>
     </div>
   </div>
@@ -594,6 +678,7 @@ let castInfo   = {};
 let myChar     = null;
 let curState   = null;
 let curScene   = '';
+let isAdmin    = false;
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 const joinScreen   = document.getElementById('join-screen');
@@ -844,7 +929,46 @@ btnNext.addEventListener('click', () => socket.emit('advance'));
 btnBack.addEventListener('click', () => socket.emit('back'));
 btnRestart.addEventListener('click', () => {
   endOverlay.classList.remove('show');
-  socket.emit('reset');
+  if (isAdmin) socket.emit('reset');
+});
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+const adminToggle   = document.getElementById('admin-toggle');
+const adminLoginRow = document.getElementById('admin-login-row');
+const adminPw       = document.getElementById('admin-pw');
+const btnAdminLogin = document.getElementById('btn-admin-login');
+const adminErr      = document.getElementById('admin-err');
+const adminBadge    = document.getElementById('admin-badge');
+const btnReset      = document.getElementById('btn-reset');
+
+adminToggle.addEventListener('click', () => {
+  if (isAdmin) return;
+  adminLoginRow.classList.toggle('show');
+  adminErr.style.display = 'none';
+});
+
+btnAdminLogin.addEventListener('click', doAdminLogin);
+adminPw.addEventListener('keydown', e => { if (e.key === 'Enter') doAdminLogin(); });
+
+function doAdminLogin() {
+  const pw = adminPw.value.trim();
+  if (!pw) return;
+  socket.emit('admin-login', { password: pw }, (res) => {
+    if (res.ok) {
+      isAdmin = true;
+      adminLoginRow.classList.remove('show');
+      adminToggle.style.display = 'none';
+      adminBadge.style.display = '';
+      btnReset.style.display = '';
+      adminErr.style.display = 'none';
+    } else {
+      adminErr.style.display = 'block';
+    }
+  });
+}
+
+btnReset.addEventListener('click', () => {
+  if (isAdmin) socket.emit('reset');
 });
 
 onlinePill.addEventListener('click', () => onlineOverlay.classList.add('show'));
