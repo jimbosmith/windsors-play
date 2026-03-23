@@ -593,6 +593,17 @@
         <div class="cast-row-empty" style="font-size:0.8em; color:var(--text-dim);">No one has joined yet.</div>
       </div>
     </div>
+
+    <div class="card" id="join-admin-section">
+      <div class="admin-toggle" id="join-admin-toggle">Admin</div>
+      <div class="admin-login-row" id="join-admin-login-row">
+        <input type="password" class="admin-input" id="join-admin-pw" placeholder="Admin password">
+        <button class="btn-admin-login" id="btn-join-admin-login">Unlock</button>
+      </div>
+      <div class="admin-err" id="join-admin-err">Wrong password</div>
+      <button class="btn-reset" id="btn-join-reset" style="display:none">↺ Reset Play to Start</button>
+      <span class="admin-badge" id="join-admin-badge" style="display:none">ADMIN</span>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════
@@ -968,6 +979,49 @@ function doAdminLogin() {
 }
 
 btnReset.addEventListener('click', () => {
+  if (isAdmin) socket.emit('reset');
+});
+
+// ── Join-screen admin ─────────────────────────────────────────────────────────
+const joinAdminToggle   = document.getElementById('join-admin-toggle');
+const joinAdminLoginRow = document.getElementById('join-admin-login-row');
+const joinAdminPw       = document.getElementById('join-admin-pw');
+const btnJoinAdminLogin = document.getElementById('btn-join-admin-login');
+const joinAdminErr      = document.getElementById('join-admin-err');
+const joinAdminBadge    = document.getElementById('join-admin-badge');
+const btnJoinReset      = document.getElementById('btn-join-reset');
+
+joinAdminToggle.addEventListener('click', () => {
+  if (isAdmin) return;
+  joinAdminLoginRow.classList.toggle('show');
+  joinAdminErr.style.display = 'none';
+});
+
+btnJoinAdminLogin.addEventListener('click', doJoinAdminLogin);
+joinAdminPw.addEventListener('keydown', e => { if (e.key === 'Enter') doJoinAdminLogin(); });
+
+function doJoinAdminLogin() {
+  const pw = joinAdminPw.value.trim();
+  if (!pw) return;
+  socket.emit('admin-login', { password: pw }, (res) => {
+    if (res.ok) {
+      isAdmin = true;
+      joinAdminLoginRow.classList.remove('show');
+      joinAdminToggle.style.display = 'none';
+      joinAdminBadge.style.display = '';
+      btnJoinReset.style.display = '';
+      joinAdminErr.style.display = 'none';
+      // Also unlock play-screen admin if they join later
+      adminToggle.style.display = 'none';
+      adminBadge.style.display = '';
+      btnReset.style.display = '';
+    } else {
+      joinAdminErr.style.display = 'block';
+    }
+  });
+}
+
+btnJoinReset.addEventListener('click', () => {
   if (isAdmin) socket.emit('reset');
 });
 

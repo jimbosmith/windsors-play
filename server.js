@@ -428,6 +428,7 @@ io.on('connection', socket => {
 
   socket.on('admin-login', ({ password }, cb) => {
     if (password === ADMIN_PASSWORD) {
+      socket.isAdmin = true;
       if (state.users[socket.id]) state.users[socket.id].admin = true;
       cb({ ok: true });
       io.emit('state', payload());
@@ -452,7 +453,7 @@ io.on('connection', socket => {
 
   socket.on('reset', () => {
     const user = state.users[socket.id];
-    if (user && user.admin) {
+    if (socket.isAdmin || (user && user.admin)) {
       state.idx = 0;
       io.emit('state', payload());
     }
